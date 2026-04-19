@@ -183,6 +183,11 @@
       font-weight: 600;
     }
 
+    .success-text {
+      color: #166534;
+      font-weight: 600;
+    }
+
     .muted-text {
       font-size: 12px;
       color: #6b7280;
@@ -287,7 +292,7 @@
           <input id="deliveryEmail" type="checkbox" />
           <div>
             <div class="delivery-option-title">Send by email</div>
-            <div class="delivery-option-text">Send each participant their own certificate directly. <em>(Coming next)</em></div>
+            <div class="delivery-option-text">Send each participant their own certificate directly.</div>
           </div>
         </label>
       </div>
@@ -297,6 +302,7 @@
       <strong>Email Settings</strong>
       <div class="muted-text" style="margin-top:6px; margin-bottom:12px;">
         If email delivery is selected, your Excel file must include an <strong>Email</strong> column.
+        Rows without an email address will be skipped for sending.
       </div>
 
       <input id="senderName" type="text" value="PM Skillshouse" placeholder="Sender Name" />
@@ -312,9 +318,10 @@ PM Skillshouse</textarea>
     </div>
 
     <div class="hint">
-      <strong>Expected Excel headings for current MVP:</strong><br />
+      <strong>Expected Excel headings for current version:</strong><br />
       Full Name<br />
-      ID Number
+      ID Number<br />
+      Email (only required for email sending)
     </div>
 
     <div class="note">Using the uploaded Mind My Money certificate template</div>
@@ -350,6 +357,19 @@ PM Skillshouse</textarea>
         .replace(/[\\\/:*?"<>|]/g, "")
         .replace(/\s+/g, " ")
         .trim();
+    }
+
+    function arrayBufferToBase64(buffer) {
+      let binary = "";
+      const bytes = new Uint8Array(buffer);
+      const chunkSize = 0x8000;
+
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, chunk);
+      }
+
+      return btoa(binary);
     }
 
     async function readExcelRows() {
@@ -401,13 +421,19 @@ PM Skillshouse</textarea>
 
       const uniqueRows = Array.from(uniqueMap.values());
       const duplicatesRemoved = cleanedRows.length - uniqueRows.length;
+      const emailEligibleCount = uniqueRows.filter(function (row) {
+        return !!row.email;
+      }).length;
+      const emailMissingCount = uniqueRows.length - emailEligibleCount;
 
       return {
         rows: uniqueRows,
         certificateDate: certificateDate,
         originalCount: cleanedRows.length,
         uniqueCount: uniqueRows.length,
-        duplicatesRemoved: duplicatesRemoved
+        duplicatesRemoved: duplicatesRemoved,
+        emailEligibleCount: emailEligibleCount,
+        emailMissingCount: emailMissingCount
       };
     }
 
@@ -495,6 +521,12 @@ PM Skillshouse</textarea>
           "</span><br><span class='muted-text'>Only unique records will be used for certificate generation.</span>";
       }
 
+      if (options.email) {
+        previewCount.innerHTML +=
+          "<br><span class='success-text'>Email-ready records: " + result.emailEligibleCount + "</span>" +
+          "<br><span class='muted-text'>Rows missing email: " + result.emailMissingCount + "</span>";
+      }
+
       previewCount.innerHTML +=
         "<div class='summary-line'><strong>Delivery selected:</strong> " +
         (selectedMethods.length ? selectedMethods.join(" + ") : "None") +
@@ -503,8 +535,12 @@ PM Skillshouse</textarea>
       previewList.innerHTML = "";
 
       result.rows.slice(0, 5).forEach(function (row) {
+        let extra = row.idNumber;
+        if (options.email && row.email) {
+          extra += " — " + row.email;
+        }
         const li = document.createElement("li");
-        li.textContent = row.fullName + " — " + row.idNumber;
+        li.textContent = row.fullName + " — " + extra;
         previewList.appendChild(li);
       });
 
@@ -551,6 +587,38 @@ PM Skillshouse</textarea>
       }
     }
 
+    async function sendCertificateEmail(row, pdfBytes, certificateDate) {
+      const senderName = document.getElementById("senderName").value.trim() || "PM Skillshouse";
+      const subject = document.getElementById("emailSubject").value.trim() || "Your Certificate of Attendance";
+      const message = document.getElementById("emailMessage").value.trim() || "Please find your certificate attached.";
+
+      const pdfBase64 = arrayBufferToBase64(pdfBytes);
+
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: row.email,
+          name: row.fullName,
+          pdfBase64: pdfBase64,
+          subject: subject,
+          message: message,
+          senderName: senderName,
+          certificateDate: certificateDate
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Email sending failed");
+      }
+
+      return data;
+    }
+
     async function generateBulkCertificates() {
       const statusText = document.getElementById("statusText");
       const previewBtn = document.getElementById("previewBtn");
@@ -565,14 +633,17 @@ PM Skillshouse</textarea>
         const result = await readExcelRows();
         showPreviewSummary(result);
 
-        if (options.email) {
-          statusText.textContent =
-            "Email delivery UI is ready, but actual sending is the next step.\nPDF options can still be processed now.";
+        if (options.email && result.emailEligibleCount === 0) {
+          throw new Error("Email delivery was selected, but no valid Email values were found in the Excel file.");
         }
 
         const templateBytes = await loadTemplateBytes();
         let mergedPdf = null;
         let zip = null;
+
+        let emailsSent = 0;
+        let emailSkipped = 0;
+        let emailFailed = 0;
 
         if (options.merged) {
           mergedPdf = await PDFLib.PDFDocument.create();
@@ -592,15 +663,30 @@ PM Skillshouse</textarea>
             result.certificateDate
           );
 
+          const singlePdfBytes = await singlePdf.save();
+
           if (options.merged) {
             const copiedPages = await mergedPdf.copyPages(singlePdf, [0]);
             mergedPdf.addPage(copiedPages[0]);
           }
 
           if (options.separate) {
-            const singlePdfBytes = await singlePdf.save();
             const safeName = sanitizeFileName(row.fullName) || ("Certificate " + (i + 1));
             zip.file(safeName + " - Certificate.pdf", singlePdfBytes);
+          }
+
+          if (options.email) {
+            if (row.email) {
+              try {
+                await sendCertificateEmail(row, singlePdfBytes, result.certificateDate);
+                emailsSent += 1;
+              } catch (emailError) {
+                console.error(emailError);
+                emailFailed += 1;
+              }
+            } else {
+              emailSkipped += 1;
+            }
           }
 
           statusText.textContent =
@@ -624,9 +710,6 @@ PM Skillshouse</textarea>
         }
 
         if (options.separate) {
-          statusText.textContent =
-            "Preparing ZIP file...\nCompleted: " + result.rows.length + " of " + result.rows.length;
-
           const zipBlob = await zip.generateAsync({ type: "blob" });
           const zipUrl = URL.createObjectURL(zipBlob);
 
@@ -643,7 +726,13 @@ PM Skillshouse</textarea>
         const completedActions = [];
         if (options.merged) completedActions.push("merged PDF downloaded");
         if (options.separate) completedActions.push("ZIP of separate PDFs downloaded");
-        if (options.email) completedActions.push("email sending prepared for next step");
+        if (options.email) {
+          completedActions.push(
+            "emails sent: " + emailsSent +
+            ", skipped: " + emailSkipped +
+            ", failed: " + emailFailed
+          );
+        }
 
         statusText.textContent =
           "Done. " + result.rows.length + " certificate(s) processed successfully.\n" +
