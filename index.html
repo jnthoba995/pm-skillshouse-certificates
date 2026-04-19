@@ -131,27 +131,27 @@
         const nameX = (pageWidth - nameWidth) / 2;
         const idX = (pageWidth - idWidth) / 2;
 
-       // NAME (centered nicely)
+// NAME (slightly smaller + cleaner)
 page.drawText(fullName, {
   x: nameX,
   y: pageHeight * 0.52,
-  size: 30,
+  size: 26, // ↓ reduced from 30
   font: boldFont,
   color: rgb(0.1, 0.1, 0.1),
 });
 
-// ID NUMBER (slightly lower)
+// ID NUMBER (slightly bigger for visibility)
 page.drawText(idNumber, {
   x: idX,
   y: pageHeight * 0.42,
-  size: 16,
+  size: 18, // ↑ increased from 16
   font: font,
   color: rgb(0.2, 0.2, 0.2),
 });
 
-// DATE (right side, aligned with "Date" label)
+// DATE (fine horizontal alignment tweak)
 page.drawText(certificateDate, {
-  x: pageWidth * 0.62,
+  x: pageWidth * 0.58, // ← moved slightly LEFT from 0.62
   y: pageHeight * 0.245,
   size: 16,
   font: font,
