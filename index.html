@@ -18,13 +18,13 @@
       background: #f4f6f8;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       padding: 24px;
     }
 
     .container {
       width: 100%;
-      max-width: 560px;
+      max-width: 640px;
       background: #ffffff;
       border-radius: 18px;
       padding: 40px 32px;
@@ -46,7 +46,8 @@
       text-align: center;
     }
 
-    input {
+    input,
+    textarea {
       width: 100%;
       padding: 14px 16px;
       margin-bottom: 14px;
@@ -55,9 +56,16 @@
       font-size: 16px;
       outline: none;
       background: #fff;
+      font-family: inherit;
     }
 
-    input:focus {
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
       border-color: #4f46e5;
     }
 
@@ -65,12 +73,13 @@
       margin-bottom: 14px;
     }
 
-    .file-label {
+    .file-label,
+    .section-title {
       display: block;
       margin-bottom: 8px;
       font-size: 14px;
       color: #374151;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     input[type="file"] {
@@ -134,23 +143,28 @@
     }
 
     .hint,
-    .preview-box {
+    .preview-box,
+    .delivery-box,
+    .email-box {
       margin-top: 16px;
       background: #f9fafb;
       border: 1px solid #e5e7eb;
       border-radius: 12px;
-      padding: 14px;
+      padding: 16px;
       font-size: 13px;
       color: #4b5563;
       line-height: 1.6;
     }
 
     .hint strong,
-    .preview-box strong {
+    .preview-box strong,
+    .delivery-box strong,
+    .email-box strong {
       color: #111827;
     }
 
-    .preview-box {
+    .preview-box,
+    .email-box {
       display: none;
     }
 
@@ -173,6 +187,48 @@
       color: #6b7280;
     }
 
+    .delivery-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .delivery-option {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .delivery-option input[type="checkbox"] {
+      width: auto;
+      margin: 4px 0 0;
+      transform: scale(1.15);
+    }
+
+    .delivery-option-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 2px;
+    }
+
+    .delivery-option-text {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    .summary-line {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #374151;
+    }
+
     @media (max-width: 640px) {
       .buttons {
         grid-template-columns: 1fr;
@@ -183,7 +239,7 @@
 <body>
   <div class="container">
     <h1>PM SkillsHouse</h1>
-    <p>Upload your Excel file, preview one certificate, then generate the final merged PDF.</p>
+    <p>Upload your Excel file, preview one certificate, choose delivery options, then process the final certificates.</p>
 
     <div class="file-wrap">
       <label class="file-label" for="excelFile">Excel file</label>
@@ -194,7 +250,7 @@
 
     <div class="buttons">
       <button id="previewBtn" class="btn-secondary" type="button">Preview First Certificate</button>
-      <button id="generateBtn" class="btn-primary" type="button">Generate Bulk PDF</button>
+      <button id="generateBtn" class="btn-primary" type="button">Process Certificates</button>
     </div>
 
     <div id="statusText" class="status"></div>
@@ -205,8 +261,57 @@
       <ol id="previewList" class="preview-list"></ol>
     </div>
 
+    <div class="delivery-box">
+      <div class="section-title">Delivery Options</div>
+      <div class="muted-text">Choose one or more ways to prepare and deliver the certificates.</div>
+
+      <div class="delivery-grid">
+        <label class="delivery-option">
+          <input id="deliveryMerged" type="checkbox" checked />
+          <div>
+            <div class="delivery-option-title">Download merged PDF</div>
+            <div class="delivery-option-text">One print-ready file for all participants.</div>
+          </div>
+        </label>
+
+        <label class="delivery-option">
+          <input id="deliverySeparate" type="checkbox" />
+          <div>
+            <div class="delivery-option-title">Download separate PDFs</div>
+            <div class="delivery-option-text">One PDF per participant in a ZIP folder. <em>(Coming next)</em></div>
+          </div>
+        </label>
+
+        <label class="delivery-option">
+          <input id="deliveryEmail" type="checkbox" />
+          <div>
+            <div class="delivery-option-title">Send by email</div>
+            <div class="delivery-option-text">Send each participant their own certificate directly. <em>(Coming next)</em></div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div id="emailBox" class="email-box">
+      <strong>Email Settings</strong>
+      <div class="muted-text" style="margin-top:6px; margin-bottom:12px;">
+        If email delivery is selected, your Excel file must include an <strong>Email</strong> column.
+      </div>
+
+      <input id="senderName" type="text" value="PM Skillshouse" placeholder="Sender Name" />
+      <input id="emailSubject" type="text" value="Your Certificate of Attendance" placeholder="Email Subject" />
+      <textarea id="emailMessage" placeholder="Email message">Dear participant,
+
+Please find your certificate attached.
+
+Thank you for attending the Mind My Money Workshop.
+
+Regards,
+PM Skillshouse</textarea>
+    </div>
+
     <div class="hint">
-      <strong>Expected Excel headings:</strong><br />
+      <strong>Expected Excel headings for current MVP:</strong><br />
       Full Name<br />
       ID Number
     </div>
@@ -215,6 +320,30 @@
   </div>
 
   <script>
+    function updateEmailBoxVisibility() {
+      const emailSelected = document.getElementById("deliveryEmail").checked;
+      const emailBox = document.getElementById("emailBox");
+      emailBox.style.display = emailSelected ? "block" : "none";
+    }
+
+    function getSelectedDeliveryOptions() {
+      return {
+        merged: document.getElementById("deliveryMerged").checked,
+        separate: document.getElementById("deliverySeparate").checked,
+        email: document.getElementById("deliveryEmail").checked
+      };
+    }
+
+    function validateDeliveryOptions() {
+      const options = getSelectedDeliveryOptions();
+
+      if (!options.merged && !options.separate && !options.email) {
+        throw new Error("Please choose at least one delivery method.");
+      }
+
+      return options;
+    }
+
     async function readExcelRows() {
       const excelFileInput = document.getElementById("excelFile");
       const certificateDate = document.getElementById("certificateDate").value.trim();
@@ -241,7 +370,8 @@
         .map(function (row) {
           return {
             fullName: String(row["Full Name"] || "").trim(),
-            idNumber: String(row["ID Number"] || "").trim()
+            idNumber: String(row["ID Number"] || "").trim(),
+            email: String(row["Email"] || "").trim()
           };
         })
         .filter(function (row) {
@@ -339,6 +469,12 @@
       const previewBox = document.getElementById("previewBox");
       const previewCount = document.getElementById("previewCount");
       const previewList = document.getElementById("previewList");
+      const options = getSelectedDeliveryOptions();
+
+      const selectedMethods = [];
+      if (options.merged) selectedMethods.push("Merged PDF");
+      if (options.separate) selectedMethods.push("Separate PDFs");
+      if (options.email) selectedMethods.push("Email");
 
       previewCount.innerHTML =
         "Valid rows found: " + result.originalCount + "<br>" +
@@ -350,6 +486,11 @@
           result.duplicatesRemoved +
           "</span><br><span class='muted-text'>Only unique records will be used for certificate generation.</span>";
       }
+
+      previewCount.innerHTML +=
+        "<div class='summary-line'><strong>Delivery selected:</strong> " +
+        (selectedMethods.length ? selectedMethods.join(" + ") : "None") +
+        "</div>";
 
       previewList.innerHTML = "";
 
@@ -371,6 +512,8 @@
         previewBtn.disabled = true;
         generateBtn.disabled = true;
         statusText.textContent = "Preparing preview...";
+
+        validateDeliveryOptions();
 
         const result = await readExcelRows();
         showPreviewSummary(result);
@@ -408,15 +551,31 @@
       try {
         previewBtn.disabled = true;
         generateBtn.disabled = true;
-        statusText.textContent = "Reading Excel file...";
+        statusText.textContent = "Preparing certificates...";
 
+        const options = validateDeliveryOptions();
         const result = await readExcelRows();
         showPreviewSummary(result);
 
+        if (options.email) {
+          statusText.textContent =
+            "Email delivery UI is ready, but actual sending is the next step.\nFor now, please use PDF delivery options.";
+          return;
+        }
+
+        if (options.separate && !options.merged) {
+          statusText.textContent =
+            "Separate PDF download is the next step.\nFor now, please select Download merged PDF.";
+          return;
+        }
+
+        if (options.separate && options.merged) {
+          statusText.textContent =
+            "Merged PDF will be generated now.\nSeparate PDF ZIP download will be added next.";
+        }
+
         const templateBytes = await loadTemplateBytes();
         const mergedPdf = await PDFLib.PDFDocument.create();
-
-        statusText.textContent = "Generating " + result.rows.length + " certificate(s)...";
 
         for (let i = 0; i < result.rows.length; i++) {
           const row = result.rows[i];
@@ -436,30 +595,62 @@
             (i + 1) + " of " + result.rows.length;
         }
 
-        const mergedPdfBytes = await mergedPdf.save();
-        const blob = new Blob([mergedPdfBytes], { type: "application/pdf" });
-        const url = URL.createObjectURL(blob);
+        if (options.merged) {
+          const mergedPdfBytes = await mergedPdf.save();
+          const blob = new Blob([mergedPdfBytes], { type: "application/pdf" });
+          const url = URL.createObjectURL(blob);
 
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "PM SkillsHouse Certificates.pdf";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "PM SkillsHouse Certificates.pdf";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
 
-        URL.revokeObjectURL(url);
-        statusText.textContent = "Done. " + result.rows.length + " certificate(s) generated successfully.";
+          URL.revokeObjectURL(url);
+        }
+
+        statusText.textContent =
+          "Done. " + result.rows.length + " certificate(s) processed successfully.";
       } catch (error) {
         console.error(error);
-        statusText.textContent = error.message || "Something went wrong while generating the bulk PDF.";
+        statusText.textContent = error.message || "Something went wrong while processing the certificates.";
       } finally {
         previewBtn.disabled = false;
         generateBtn.disabled = false;
       }
     }
 
+    document.getElementById("deliveryEmail").addEventListener("change", updateEmailBoxVisibility);
+    document.getElementById("deliveryMerged").addEventListener("change", function () {
+      const previewBox = document.getElementById("previewBox");
+      if (previewBox.style.display === "block") {
+        try {
+          readExcelRows().then(showPreviewSummary).catch(function () {});
+        } catch (e) {}
+      }
+    });
+    document.getElementById("deliverySeparate").addEventListener("change", function () {
+      const previewBox = document.getElementById("previewBox");
+      if (previewBox.style.display === "block") {
+        try {
+          readExcelRows().then(showPreviewSummary).catch(function () {});
+        } catch (e) {}
+      }
+    });
+    document.getElementById("deliveryEmail").addEventListener("change", function () {
+      const previewBox = document.getElementById("previewBox");
+      if (previewBox.style.display === "block") {
+        try {
+          readExcelRows().then(showPreviewSummary).catch(function () {});
+        } catch (e) {}
+      }
+    });
+
     document.getElementById("previewBtn").addEventListener("click", previewFirstCertificate);
     document.getElementById("generateBtn").addEventListener("click", generateBulkCertificates);
+
+    updateEmailBoxVisibility();
   </script>
 </body>
 </html>
