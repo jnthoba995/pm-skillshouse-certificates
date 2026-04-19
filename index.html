@@ -125,46 +125,41 @@
         const idSize = 16;
         const dateSize = 16;
 
-        const nameWidth = boldFont.widthOfTextAtSize(fullName, nameSize);
-        const idWidth = font.widthOfTextAtSize(idNumber, idSize);
+        const nameSize = 24;
+const idSize = 20;
+const dateSize = 16;
 
-        const nameX = (pageWidth - nameWidth) / 2;
-        const idX = (pageWidth - idWidth) / 2;
+const nameWidth = boldFont.widthOfTextAtSize(fullName, nameSize);
+const idWidth = font.widthOfTextAtSize(idNumber, idSize);
+const dateWidth = font.widthOfTextAtSize(certificateDate, dateSize);
 
-// NAME (true center aligned)
-const nameWidth = boldFont.widthOfTextAtSize(fullName, 24);
 const nameX = (pageWidth - nameWidth) / 2;
+const idX = (pageWidth - idWidth) / 2;
+const dateX = (pageWidth - dateWidth) / 2;
 
+// NAME
 page.drawText(fullName, {
   x: nameX,
   y: pageHeight * 0.515,
-  size: 24,
+  size: nameSize,
   font: boldFont,
   color: rgb(0.1, 0.1, 0.1),
 });
 
-
-// ID NUMBER (true center aligned)
-const idWidth = font.widthOfTextAtSize(idNumber, 20);
-const idX = (pageWidth - idWidth) / 2;
-
+// ID NUMBER
 page.drawText(idNumber, {
   x: idX,
   y: pageHeight * 0.41,
-  size: 20,
+  size: idSize,
   font: font,
   color: rgb(0.2, 0.2, 0.2),
 });
 
-
-// DATE (true center aligned — THIS is the key fix)
-const dateWidth = font.widthOfTextAtSize(certificateDate, 16);
-const dateX = (pageWidth - dateWidth) / 2;
-
+// DATE
 page.drawText(certificateDate, {
   x: dateX,
   y: pageHeight * 0.245,
-  size: 16,
+  size: dateSize,
   font: font,
   color: rgb(0.2, 0.2, 0.2),
 });
