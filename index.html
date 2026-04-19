@@ -109,105 +109,101 @@
   </div>
 
   <script>
-    async function generateCertificate() {
-      const statusText = document.getElementById("statusText");
-      const generateBtn = document.getElementById("generateBtn");
+  async function generateCertificate() {
+    const statusText = document.getElementById("statusText");
+    const generateBtn = document.getElementById("generateBtn");
 
-      const fullName = document.getElementById("fullName").value.trim();
-      const idNumber = document.getElementById("idNumber").value.trim();
-      const certificateDate = document.getElementById("certificateDate").value.trim();
+    const fullName = document.getElementById("fullName").value.trim();
+    const idNumber = document.getElementById("idNumber").value.trim();
+    const certificateDate = document.getElementById("certificateDate").value.trim();
 
-      if (!fullName || !idNumber || !certificateDate) {
-        statusText.textContent = "Please complete all fields.";
-        return;
-      }
-
-      try {
-        generateBtn.disabled = true;
-        statusText.textContent = "Generating certificate...";
-
-        const existingPdfBytes = await fetch("Mind%20My%20Money%20Certificate%20final%20copy%202%20(1).pdf").then(function (res) {
-          if (!res.ok) {
-            throw new Error("Certificate template could not be loaded.");
-          }
-          return res.arrayBuffer();
-        });
-
-        const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-        const page = pdfDoc.getPages()[0];
-
-        const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-        const boldFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
-        const textColor = PDFLib.rgb(0.2, 0.2, 0.2);
-        const nameColor = PDFLib.rgb(0.1, 0.1, 0.1);
-
-        const pageWidth = page.getWidth();
-        const pageHeight = page.getHeight();
-
-        const nameSize = 24;
-        const idSize = 20;
-        const dateSize = 16;
-
-        const nameWidth = boldFont.widthOfTextAtSize(fullName, nameSize);
-        const idWidth = font.widthOfTextAtSize(idNumber, idSize);
-        const dateWidth = font.widthOfTextAtSize(certificateDate, dateSize);
-
-        const nameX = (pageWidth - nameWidth) / 2;
-        const idX = (pageWidth - idWidth) / 2;
-        const dateX = (pageWidth - dateWidth) / 2;
-
-        page.drawText(fullName, {
-          x: nameX,
-          y: pageHeight * 0.515,
-          size: nameSize,
-          font: boldFont,
-          color: nameColor
-        });
-
-        page.drawText(idNumber, {
-          x: idX,
-          y: pageHeight * 0.41,
-          size: idSize,
-          font: font,
-          color: textColor
-        });
-
-       // DATE (right aligned under "Date" label)
-const rightMargin = 120; // tweak this if needed
-
-const dateWidth = font.widthOfTextAtSize(certificateDate, dateSize);
-const dateX = pageWidth - dateWidth - rightMargin;
-
-page.drawText(certificateDate, {
-  x: dateX,
-  y: pageHeight * 0.245,
-  size: dateSize,
-  font: font,
-  color: textColor
-});
-
-        const pdfBytes = await pdfDoc.save();
-        const blob = new Blob([pdfBytes], { type: "application/pdf" });
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fullName + " - Certificate.pdf";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        URL.revokeObjectURL(url);
-        statusText.textContent = "Certificate generated successfully.";
-      } catch (error) {
-        console.error(error);
-        statusText.textContent = "Something went wrong while generating the certificate.";
-      } finally {
-        generateBtn.disabled = false;
-      }
+    if (!fullName || !idNumber || !certificateDate) {
+      statusText.textContent = "Please complete all fields.";
+      return;
     }
 
-    document.getElementById("generateBtn").addEventListener("click", generateCertificate);
-  </script>
+    try {
+      generateBtn.disabled = true;
+      statusText.textContent = "Generating certificate...";
+
+      const existingPdfBytes = await fetch("Mind%20My%20Money%20Certificate%20final%20copy%202%20(1).pdf").then(function (res) {
+        if (!res.ok) {
+          throw new Error("Certificate template could not be loaded.");
+        }
+        return res.arrayBuffer();
+      });
+
+      const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+      const page = pdfDoc.getPages()[0];
+
+      const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+      const boldFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+      const textColor = PDFLib.rgb(0.2, 0.2, 0.2);
+      const nameColor = PDFLib.rgb(0.1, 0.1, 0.1);
+
+      const pageWidth = page.getWidth();
+      const pageHeight = page.getHeight();
+
+      const nameSize = 24;
+      const idSize = 20;
+      const dateSize = 16;
+
+      const nameWidth = boldFont.widthOfTextAtSize(fullName, nameSize);
+      const idWidth = font.widthOfTextAtSize(idNumber, idSize);
+      const dateWidth = font.widthOfTextAtSize(certificateDate, dateSize);
+
+      const nameX = (pageWidth - nameWidth) / 2;
+      const idX = (pageWidth - idWidth) / 2;
+
+      const rightMargin = 120;
+      const dateX = pageWidth - dateWidth - rightMargin;
+
+      page.drawText(fullName, {
+        x: nameX,
+        y: pageHeight * 0.515,
+        size: nameSize,
+        font: boldFont,
+        color: nameColor
+      });
+
+      page.drawText(idNumber, {
+        x: idX,
+        y: pageHeight * 0.41,
+        size: idSize,
+        font: font,
+        color: textColor
+      });
+
+      page.drawText(certificateDate, {
+        x: dateX,
+        y: pageHeight * 0.245,
+        size: dateSize,
+        font: font,
+        color: textColor
+      });
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fullName + " - Certificate.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      URL.revokeObjectURL(url);
+      statusText.textContent = "Certificate generated successfully.";
+    } catch (error) {
+      console.error(error);
+      statusText.textContent = "Something went wrong while generating the certificate.";
+    } finally {
+      generateBtn.disabled = false;
+    }
+  }
+
+  document.getElementById("generateBtn").addEventListener("click", generateCertificate);
+</script>
 </body>
 </html>
