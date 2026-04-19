@@ -131,27 +131,38 @@
         const nameX = (pageWidth - nameWidth) / 2;
         const idX = (pageWidth - idWidth) / 2;
 
-// NAME (slightly smaller + cleaner)
+// NAME (true center aligned)
+const nameWidth = boldFont.widthOfTextAtSize(fullName, 24);
+const nameX = (pageWidth - nameWidth) / 2;
+
 page.drawText(fullName, {
   x: nameX,
-  y: pageHeight * 0.515, // ↓ reduced from 0.52
-  size: 24, // ↓ reduced from 26
+  y: pageHeight * 0.515,
+  size: 24,
   font: boldFont,
   color: rgb(0.1, 0.1, 0.1),
 });
 
-// ID NUMBER (slightly bigger for visibility)
+
+// ID NUMBER (true center aligned)
+const idWidth = font.widthOfTextAtSize(idNumber, 20);
+const idX = (pageWidth - idWidth) / 2;
+
 page.drawText(idNumber, {
   x: idX,
-  y: pageHeight * 0.41, // ↓ reduced from 0,42
-  size: 20, // ↑ increased from 18
+  y: pageHeight * 0.41,
+  size: 20,
   font: font,
   color: rgb(0.2, 0.2, 0.2),
 });
 
-// DATE (fine horizontal alignment tweak)
+
+// DATE (true center aligned — THIS is the key fix)
+const dateWidth = font.widthOfTextAtSize(certificateDate, 16);
+const dateX = (pageWidth - dateWidth) / 2;
+
 page.drawText(certificateDate, {
-  x: pageWidth * 0.58, // ← moved slightly LEFT from 0.62
+  x: dateX,
   y: pageHeight * 0.245,
   size: 16,
   font: font,
