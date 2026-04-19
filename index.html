@@ -133,7 +133,8 @@
       text-align: center;
     }
 
-    .hint, .preview-box {
+    .hint,
+    .preview-box {
       margin-top: 16px;
       background: #f9fafb;
       border: 1px solid #e5e7eb;
@@ -144,7 +145,8 @@
       line-height: 1.6;
     }
 
-    .hint strong, .preview-box strong {
+    .hint strong,
+    .preview-box strong {
       color: #111827;
     }
 
@@ -159,6 +161,16 @@
 
     .preview-list li {
       margin-bottom: 4px;
+    }
+
+    .warning-text {
+      color: #b45309;
+      font-weight: 600;
+    }
+
+    .muted-text {
+      font-size: 12px;
+      color: #6b7280;
     }
 
     @media (max-width: 640px) {
@@ -204,67 +216,70 @@
 
   <script>
     async function readExcelRows() {
-  const excelFileInput = document.getElementById("excelFile");
-  const certificateDate = document.getElementById("certificateDate").value.trim();
+      const excelFileInput = document.getElementById("excelFile");
+      const certificateDate = document.getElementById("certificateDate").value.trim();
 
-  if (!excelFileInput.files || !excelFileInput.files[0]) {
-    throw new Error("Please upload an Excel file.");
-  }
+      if (!excelFileInput.files || !excelFileInput.files[0]) {
+        throw new Error("Please upload an Excel file.");
+      }
 
-  if (!certificateDate) {
-    throw new Error("Please enter the certificate date.");
-  }
+      if (!certificateDate) {
+        throw new Error("Please enter the certificate date.");
+      }
 
-  const excelBuffer = await excelFileInput.files[0].arrayBuffer();
-  const workbook = XLSX.read(excelBuffer, { type: "array" });
-  const firstSheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[firstSheetName];
-  const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+      const excelBuffer = await excelFileInput.files[0].arrayBuffer();
+      const workbook = XLSX.read(excelBuffer, { type: "array" });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
-  if (!rows.length) {
-    throw new Error("The Excel file has no data rows.");
-  }
+      if (!rows.length) {
+        throw new Error("The Excel file has no data rows.");
+      }
 
-  const cleanedRows = rows
-    .map(function (row) {
+      const cleanedRows = rows
+        .map(function (row) {
+          return {
+            fullName: String(row["Full Name"] || "").trim(),
+            idNumber: String(row["ID Number"] || "").trim()
+          };
+        })
+        .filter(function (row) {
+          return row.fullName && row.idNumber;
+        });
+
+      if (!cleanedRows.length) {
+        throw new Error("No valid rows found. Please use headings exactly: Full Name, ID Number");
+      }
+
+      const uniqueMap = new Map();
+
+      cleanedRows.forEach(function (row) {
+        const key = row.fullName + "||" + row.idNumber;
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, row);
+        }
+      });
+
+      const uniqueRows = Array.from(uniqueMap.values());
+      const duplicatesRemoved = cleanedRows.length - uniqueRows.length;
+
       return {
-        fullName: String(row["Full Name"] || "").trim(),
-        idNumber: String(row["ID Number"] || "").trim()
+        rows: uniqueRows,
+        certificateDate: certificateDate,
+        originalCount: cleanedRows.length,
+        uniqueCount: uniqueRows.length,
+        duplicatesRemoved: duplicatesRemoved
       };
-    })
-    .filter(function (row) {
-      return row.fullName && row.idNumber;
-    });
-
-  if (!cleanedRows.length) {
-    throw new Error("No valid rows found. Please use headings exactly: Full Name, ID Number");
-  }
-
-  const uniqueMap = new Map();
-  cleanedRows.forEach(function (row) {
-    const key = row.fullName + "||" + row.idNumber;
-    if (!uniqueMap.has(key)) {
-      uniqueMap.set(key, row);
     }
-  });
-
-  const uniqueRows = Array.from(uniqueMap.values());
-  const duplicatesRemoved = cleanedRows.length - uniqueRows.length;
-
-  return {
-    rows: uniqueRows,
-    certificateDate: certificateDate,
-    originalCount: cleanedRows.length,
-    uniqueCount: uniqueRows.length,
-    duplicatesRemoved: duplicatesRemoved
-  };
-}
 
     async function loadTemplateBytes() {
       const response = await fetch("Mind%20My%20Money%20Certificate%20final%20copy%202%20(1).pdf");
+
       if (!response.ok) {
         throw new Error("Certificate template could not be loaded.");
       }
+
       return await response.arrayBuffer();
     }
 
@@ -321,31 +336,32 @@
     }
 
     function showPreviewSummary(result) {
-  const previewBox = document.getElementById("previewBox");
-  const previewCount = document.getElementById("previewCount");
-  const previewList = document.getElementById("previewList");
+      const previewBox = document.getElementById("previewBox");
+      const previewCount = document.getElementById("previewCount");
+      const previewList = document.getElementById("previewList");
 
-  previewCount.innerHTML =
-    "Valid rows found: " + result.originalCount + "<br>" +
-    "Unique records used: " + result.uniqueCount;
+      previewCount.innerHTML =
+        "Valid rows found: " + result.originalCount + "<br>" +
+        "Unique records used: " + result.uniqueCount;
 
-  if (result.duplicatesRemoved > 0) {
-    previewCount.innerHTML +=
-      "<br><span style='color:#b45309; font-weight:600;'>Duplicates detected and removed: " +
-      result.duplicatesRemoved +
-      "</span><br><span style='font-size:12px; color:#6b7280;'>Only unique records will be used for certificate generation.</span>";
-  }
+      if (result.duplicatesRemoved > 0) {
+        previewCount.innerHTML +=
+          "<br><span class='warning-text'>Duplicates detected and removed: " +
+          result.duplicatesRemoved +
+          "</span><br><span class='muted-text'>Only unique records will be used for certificate generation.</span>";
+      }
 
-  previewList.innerHTML = "";
+      previewList.innerHTML = "";
 
-  result.rows.slice(0, 5).forEach(function (row) {
-    const li = document.createElement("li");
-    li.textContent = row.fullName + " — " + row.idNumber;
-    previewList.appendChild(li);
-  });
+      result.rows.slice(0, 5).forEach(function (row) {
+        const li = document.createElement("li");
+        li.textContent = row.fullName + " — " + row.idNumber;
+        previewList.appendChild(li);
+      });
 
-  previewBox.style.display = "block";
-}
+      previewBox.style.display = "block";
+    }
+
     async function previewFirstCertificate() {
       const statusText = document.getElementById("statusText");
       const previewBtn = document.getElementById("previewBtn");
@@ -357,10 +373,11 @@
         statusText.textContent = "Preparing preview...";
 
         const result = await readExcelRows();
-        showPreviewSummary(result.rows);
+        showPreviewSummary(result);
 
         const firstRow = result.rows[0];
         const templateBytes = await loadTemplateBytes();
+
         const previewPdf = await buildSingleCertificatePdf(
           templateBytes,
           firstRow.fullName,
@@ -394,7 +411,7 @@
         statusText.textContent = "Reading Excel file...";
 
         const result = await readExcelRows();
-        showPreviewSummary(result.rows);
+        showPreviewSummary(result);
 
         const templateBytes = await loadTemplateBytes();
         const mergedPdf = await PDFLib.PDFDocument.create();
