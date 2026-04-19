@@ -172,13 +172,19 @@
           color: textColor
         });
 
-        page.drawText(certificateDate, {
-          x: dateX,
-          y: pageHeight * 0.245,
-          size: dateSize,
-          font: font,
-          color: textColor
-        });
+       // DATE (right aligned under "Date" label)
+const rightMargin = 120; // tweak this if needed
+
+const dateWidth = font.widthOfTextAtSize(certificateDate, dateSize);
+const dateX = pageWidth - dateWidth - rightMargin;
+
+page.drawText(certificateDate, {
+  x: dateX,
+  y: pageHeight * 0.245,
+  size: dateSize,
+  font: font,
+  color: textColor
+});
 
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: "application/pdf" });
