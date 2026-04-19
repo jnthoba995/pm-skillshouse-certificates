@@ -320,23 +320,32 @@
       return pdfDoc;
     }
 
-    function showPreviewSummary(rows) {
-      const previewBox = document.getElementById("previewBox");
-      const previewCount = document.getElementById("previewCount");
-      const previewList = document.getElementById("previewList");
+    function showPreviewSummary(result) {
+  const previewBox = document.getElementById("previewBox");
+  const previewCount = document.getElementById("previewCount");
+  const previewList = document.getElementById("previewList");
 
-      previewCount.textContent = "Valid unique records found: " + rows.length;
-      previewList.innerHTML = "";
+  previewCount.innerHTML =
+    "Valid rows found: " + result.originalCount + "<br>" +
+    "Unique records used: " + result.uniqueCount;
 
-      rows.slice(0, 5).forEach(function (row) {
-        const li = document.createElement("li");
-        li.textContent = row.fullName + " — " + row.idNumber;
-        previewList.appendChild(li);
-      });
+  if (result.duplicatesRemoved > 0) {
+    previewCount.innerHTML +=
+      "<br><span style='color:#b45309; font-weight:600;'>Duplicates detected and removed: " +
+      result.duplicatesRemoved +
+      "</span><br><span style='font-size:12px; color:#6b7280;'>Only unique records will be used for certificate generation.</span>";
+  }
 
-      previewBox.style.display = "block";
-    }
+  previewList.innerHTML = "";
 
+  result.rows.slice(0, 5).forEach(function (row) {
+    const li = document.createElement("li");
+    li.textContent = row.fullName + " — " + row.idNumber;
+    previewList.appendChild(li);
+  });
+
+  previewBox.style.display = "block";
+}
     async function previewFirstCertificate() {
       const statusText = document.getElementById("statusText");
       const previewBtn = document.getElementById("previewBtn");
