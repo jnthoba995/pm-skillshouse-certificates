@@ -131,30 +131,32 @@
         const nameX = (pageWidth - nameWidth) / 2;
         const idX = (pageWidth - idWidth) / 2;
 
-        // First placement guess based on template
-        page.drawText(fullName, {
-          x: nameX,
-          y: pageHeight * 0.49,
-          size: nameSize,
-          font: boldFont,
-          color: rgb(0.15, 0.15, 0.15),
-        });
+       // NAME (centered nicely)
+page.drawText(fullName, {
+  x: nameX,
+  y: pageHeight * 0.52,
+  size: 30,
+  font: boldFont,
+  color: rgb(0.1, 0.1, 0.1),
+});
 
-        page.drawText(idNumber, {
-          x: idX,
-          y: pageHeight * 0.39,
-          size: idSize,
-          font: font,
-          color: rgb(0.2, 0.2, 0.2),
-        });
+// ID NUMBER (slightly lower)
+page.drawText(idNumber, {
+  x: idX,
+  y: pageHeight * 0.42,
+  size: 16,
+  font: font,
+  color: rgb(0.2, 0.2, 0.2),
+});
 
-        page.drawText(certificateDate, {
-          x: pageWidth * 0.66,
-          y: pageHeight * 0.14,
-          size: dateSize,
-          font: font,
-          color: rgb(0.2, 0.2, 0.2),
-        });
+// DATE (right side, aligned with "Date" label)
+page.drawText(certificateDate, {
+  x: pageWidth * 0.70,
+  y: pageHeight * 0.18,
+  size: 16,
+  font: font,
+  color: rgb(0.2, 0.2, 0.2),
+});
 
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: "application/pdf" });
