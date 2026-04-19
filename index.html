@@ -152,12 +152,12 @@ page.drawText(idNumber, {
 // DATE (right side, aligned with "Date" label)
 page.drawText(certificateDate, {
   x: pageWidth * 0.62,
-  y: pageHeight * 0.155,
+  y: pageHeight * 0.205,
   size: 16,
   font: font,
   color: rgb(0.2, 0.2, 0.2),
 });
-
+        
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: "application/pdf" });
         const url = URL.createObjectURL(blob);
