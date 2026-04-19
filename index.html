@@ -6,6 +6,7 @@
   <title>PM SkillsHouse Certificates</title>
   <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -278,7 +279,7 @@
           <input id="deliverySeparate" type="checkbox" />
           <div>
             <div class="delivery-option-title">Download separate PDFs</div>
-            <div class="delivery-option-text">One PDF per participant in a ZIP folder. <em>(Coming next)</em></div>
+            <div class="delivery-option-text">One PDF per participant in a ZIP folder.</div>
           </div>
         </label>
 
@@ -342,6 +343,13 @@ PM Skillshouse</textarea>
       }
 
       return options;
+    }
+
+    function sanitizeFileName(value) {
+      return String(value || "")
+        .replace(/[\\\/:*?"<>|]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
     }
 
     async function readExcelRows() {
@@ -559,23 +567,20 @@ PM Skillshouse</textarea>
 
         if (options.email) {
           statusText.textContent =
-            "Email delivery UI is ready, but actual sending is the next step.\nFor now, please use PDF delivery options.";
-          return;
-        }
-
-        if (options.separate && !options.merged) {
-          statusText.textContent =
-            "Separate PDF download is the next step.\nFor now, please select Download merged PDF.";
-          return;
-        }
-
-        if (options.separate && options.merged) {
-          statusText.textContent =
-            "Merged PDF will be generated now.\nSeparate PDF ZIP download will be added next.";
+            "Email delivery UI is ready, but actual sending is the next step.\nPDF options can still be processed now.";
         }
 
         const templateBytes = await loadTemplateBytes();
-        const mergedPdf = await PDFLib.PDFDocument.create();
+        let mergedPdf = null;
+        let zip = null;
+
+        if (options.merged) {
+          mergedPdf = await PDFLib.PDFDocument.create();
+        }
+
+        if (options.separate) {
+          zip = new JSZip();
+        }
 
         for (let i = 0; i < result.rows.length; i++) {
           const row = result.rows[i];
@@ -587,31 +592,62 @@ PM Skillshouse</textarea>
             result.certificateDate
           );
 
-          const copiedPages = await mergedPdf.copyPages(singlePdf, [0]);
-          mergedPdf.addPage(copiedPages[0]);
+          if (options.merged) {
+            const copiedPages = await mergedPdf.copyPages(singlePdf, [0]);
+            mergedPdf.addPage(copiedPages[0]);
+          }
+
+          if (options.separate) {
+            const singlePdfBytes = await singlePdf.save();
+            const safeName = sanitizeFileName(row.fullName) || ("Certificate " + (i + 1));
+            zip.file(safeName + " - Certificate.pdf", singlePdfBytes);
+          }
 
           statusText.textContent =
-            "Generating " + result.rows.length + " certificate(s)...\nCompleted: " +
+            "Processing " + result.rows.length + " certificate(s)...\nCompleted: " +
             (i + 1) + " of " + result.rows.length;
         }
 
         if (options.merged) {
           const mergedPdfBytes = await mergedPdf.save();
-          const blob = new Blob([mergedPdfBytes], { type: "application/pdf" });
-          const url = URL.createObjectURL(blob);
+          const mergedBlob = new Blob([mergedPdfBytes], { type: "application/pdf" });
+          const mergedUrl = URL.createObjectURL(mergedBlob);
 
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "PM SkillsHouse Certificates.pdf";
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
+          const mergedLink = document.createElement("a");
+          mergedLink.href = mergedUrl;
+          mergedLink.download = "PM SkillsHouse Certificates.pdf";
+          document.body.appendChild(mergedLink);
+          mergedLink.click();
+          document.body.removeChild(mergedLink);
 
-          URL.revokeObjectURL(url);
+          URL.revokeObjectURL(mergedUrl);
         }
 
+        if (options.separate) {
+          statusText.textContent =
+            "Preparing ZIP file...\nCompleted: " + result.rows.length + " of " + result.rows.length;
+
+          const zipBlob = await zip.generateAsync({ type: "blob" });
+          const zipUrl = URL.createObjectURL(zipBlob);
+
+          const zipLink = document.createElement("a");
+          zipLink.href = zipUrl;
+          zipLink.download = "PM SkillsHouse Certificates ZIP.zip";
+          document.body.appendChild(zipLink);
+          zipLink.click();
+          document.body.removeChild(zipLink);
+
+          URL.revokeObjectURL(zipUrl);
+        }
+
+        const completedActions = [];
+        if (options.merged) completedActions.push("merged PDF downloaded");
+        if (options.separate) completedActions.push("ZIP of separate PDFs downloaded");
+        if (options.email) completedActions.push("email sending prepared for next step");
+
         statusText.textContent =
-          "Done. " + result.rows.length + " certificate(s) processed successfully.";
+          "Done. " + result.rows.length + " certificate(s) processed successfully.\n" +
+          completedActions.join(" + ") + ".";
       } catch (error) {
         console.error(error);
         statusText.textContent = error.message || "Something went wrong while processing the certificates.";
@@ -621,31 +657,20 @@ PM Skillshouse</textarea>
       }
     }
 
-    document.getElementById("deliveryEmail").addEventListener("change", updateEmailBoxVisibility);
-    document.getElementById("deliveryMerged").addEventListener("change", function () {
+    function refreshPreviewIfVisible() {
       const previewBox = document.getElementById("previewBox");
       if (previewBox.style.display === "block") {
-        try {
-          readExcelRows().then(showPreviewSummary).catch(function () {});
-        } catch (e) {}
+        readExcelRows().then(showPreviewSummary).catch(function () {});
       }
-    });
-    document.getElementById("deliverySeparate").addEventListener("change", function () {
-      const previewBox = document.getElementById("previewBox");
-      if (previewBox.style.display === "block") {
-        try {
-          readExcelRows().then(showPreviewSummary).catch(function () {});
-        } catch (e) {}
-      }
-    });
+    }
+
     document.getElementById("deliveryEmail").addEventListener("change", function () {
-      const previewBox = document.getElementById("previewBox");
-      if (previewBox.style.display === "block") {
-        try {
-          readExcelRows().then(showPreviewSummary).catch(function () {});
-        } catch (e) {}
-      }
+      updateEmailBoxVisibility();
+      refreshPreviewIfVisible();
     });
+
+    document.getElementById("deliveryMerged").addEventListener("change", refreshPreviewIfVisible);
+    document.getElementById("deliverySeparate").addEventListener("change", refreshPreviewIfVisible);
 
     document.getElementById("previewBtn").addEventListener("click", previewFirstCertificate);
     document.getElementById("generateBtn").addEventListener("click", generateBulkCertificates);
