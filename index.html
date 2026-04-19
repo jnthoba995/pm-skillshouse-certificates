@@ -204,57 +204,61 @@
 
   <script>
     async function readExcelRows() {
-      const excelFileInput = document.getElementById("excelFile");
-      const certificateDate = document.getElementById("certificateDate").value.trim();
+  const excelFileInput = document.getElementById("excelFile");
+  const certificateDate = document.getElementById("certificateDate").value.trim();
 
-      if (!excelFileInput.files || !excelFileInput.files[0]) {
-        throw new Error("Please upload an Excel file.");
-      }
+  if (!excelFileInput.files || !excelFileInput.files[0]) {
+    throw new Error("Please upload an Excel file.");
+  }
 
-      if (!certificateDate) {
-        throw new Error("Please enter the certificate date.");
-      }
+  if (!certificateDate) {
+    throw new Error("Please enter the certificate date.");
+  }
 
-      const excelBuffer = await excelFileInput.files[0].arrayBuffer();
-      const workbook = XLSX.read(excelBuffer, { type: "array" });
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+  const excelBuffer = await excelFileInput.files[0].arrayBuffer();
+  const workbook = XLSX.read(excelBuffer, { type: "array" });
+  const firstSheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[firstSheetName];
+  const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
-      if (!rows.length) {
-        throw new Error("The Excel file has no data rows.");
-      }
+  if (!rows.length) {
+    throw new Error("The Excel file has no data rows.");
+  }
 
-      const cleanedRows = rows
-        .map(function (row) {
-          return {
-            fullName: String(row["Full Name"] || "").trim(),
-            idNumber: String(row["ID Number"] || "").trim()
-          };
-        })
-        .filter(function (row) {
-          return row.fullName && row.idNumber;
-        });
-
-      if (!cleanedRows.length) {
-        throw new Error("No valid rows found. Please use headings exactly: Full Name, ID Number");
-      }
-
-      const uniqueMap = new Map();
-      cleanedRows.forEach(function (row) {
-        const key = row.fullName + "||" + row.idNumber;
-        if (!uniqueMap.has(key)) {
-          uniqueMap.set(key, row);
-        }
-      });
-
-      const uniqueRows = Array.from(uniqueMap.values());
-
+  const cleanedRows = rows
+    .map(function (row) {
       return {
-        rows: uniqueRows,
-        certificateDate: certificateDate
+        fullName: String(row["Full Name"] || "").trim(),
+        idNumber: String(row["ID Number"] || "").trim()
       };
+    })
+    .filter(function (row) {
+      return row.fullName && row.idNumber;
+    });
+
+  if (!cleanedRows.length) {
+    throw new Error("No valid rows found. Please use headings exactly: Full Name, ID Number");
+  }
+
+  const uniqueMap = new Map();
+  cleanedRows.forEach(function (row) {
+    const key = row.fullName + "||" + row.idNumber;
+    if (!uniqueMap.has(key)) {
+      uniqueMap.set(key, row);
     }
+  });
+
+  const uniqueRows = Array.from(uniqueMap.values());
+  const duplicatesRemoved = cleanedRows.length - uniqueRows.length;
+
+  return {
+    rows: uniqueRows,
+    certificateDate: certificateDate,
+    originalCount: cleanedRows.length,
+    uniqueCount: uniqueRows.length,
+    duplicatesRemoved: duplicatesRemoved
+  };
+}
 
     async function loadTemplateBytes() {
       const response = await fetch("Mind%20My%20Money%20Certificate%20final%20copy%202%20(1).pdf");
