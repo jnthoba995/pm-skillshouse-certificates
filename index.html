@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PM SkillsHouse Certificates</title>
   <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -23,7 +24,7 @@
 
     .container {
       width: 100%;
-      max-width: 460px;
+      max-width: 520px;
       background: #ffffff;
       border-radius: 18px;
       padding: 40px 32px;
@@ -52,10 +53,28 @@
       border-radius: 10px;
       font-size: 16px;
       outline: none;
+      background: #fff;
     }
 
     input:focus {
       border-color: #4f46e5;
+    }
+
+    .file-wrap {
+      text-align: left;
+      margin-bottom: 14px;
+    }
+
+    .file-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #374151;
+      font-weight: 600;
+    }
+
+    input[type="file"] {
+      padding: 12px;
     }
 
     button {
@@ -68,6 +87,7 @@
       font-size: 16px;
       font-weight: 700;
       cursor: pointer;
+      margin-top: 4px;
     }
 
     button:hover {
@@ -84,6 +104,7 @@
       margin-top: 16px;
       font-size: 14px;
       color: #374151;
+      white-space: pre-line;
     }
 
     .note {
@@ -91,119 +112,193 @@
       font-size: 12px;
       color: #6b7280;
     }
+
+    .hint {
+      margin-top: 10px;
+      text-align: left;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 13px;
+      color: #4b5563;
+      line-height: 1.5;
+    }
+
+    .hint strong {
+      color: #111827;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>PM SkillsHouse</h1>
-    <p>Generate your certificate instantly</p>
+    <p>Upload your Excel file and generate certificates in one merged PDF.</p>
 
-    <input id="fullName" type="text" placeholder="Full Name" />
-    <input id="idNumber" type="text" placeholder="ID Number" />
-    <input id="certificateDate" type="text" placeholder="Date (e.g. 19-04-2026)" />
+    <div class="file-wrap">
+      <label class="file-label" for="excelFile">Excel file</label>
+      <input id="excelFile" type="file" accept=".xlsx,.xls" />
+    </div>
 
-    <button id="generateBtn" type="button">Generate Certificate PDF</button>
+    <input id="certificateDate" type="text" placeholder="Certificate Date (e.g. 19-04-2026)" />
+
+    <button id="generateBtn" type="button">Generate Bulk Certificates PDF</button>
 
     <div id="statusText" class="status"></div>
+
+    <div class="hint">
+      <strong>Expected Excel headings:</strong><br />
+      Full Name<br />
+      ID Number
+    </div>
+
     <div class="note">Using the uploaded Mind My Money certificate template</div>
   </div>
 
   <script>
-  async function generateCertificate() {
-    const statusText = document.getElementById("statusText");
-    const generateBtn = document.getElementById("generateBtn");
+    async function generateBulkCertificates() {
+      const statusText = document.getElementById("statusText");
+      const generateBtn = document.getElementById("generateBtn");
+      const excelFileInput = document.getElementById("excelFile");
+      const certificateDate = document.getElementById("certificateDate").value.trim();
 
-    const fullName = document.getElementById("fullName").value.trim();
-    const idNumber = document.getElementById("idNumber").value.trim();
-    const certificateDate = document.getElementById("certificateDate").value.trim();
+      if (!excelFileInput.files || !excelFileInput.files[0]) {
+        statusText.textContent = "Please upload an Excel file.";
+        return;
+      }
 
-    if (!fullName || !idNumber || !certificateDate) {
-      statusText.textContent = "Please complete all fields.";
-      return;
-    }
+      if (!certificateDate) {
+        statusText.textContent = "Please enter the certificate date.";
+        return;
+      }
 
-    try {
-      generateBtn.disabled = true;
-      statusText.textContent = "Generating certificate...";
+      try {
+        generateBtn.disabled = true;
+        statusText.textContent = "Reading Excel file...";
 
-      const existingPdfBytes = await fetch("Mind%20My%20Money%20Certificate%20final%20copy%202%20(1).pdf").then(function (res) {
-        if (!res.ok) {
-          throw new Error("Certificate template could not be loaded.");
+        const excelBuffer = await excelFileInput.files[0].arrayBuffer();
+        const workbook = XLSX.read(excelBuffer, { type: "array" });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+        if (!rows.length) {
+          statusText.textContent = "The Excel file has no data rows.";
+          generateBtn.disabled = false;
+          return;
         }
-        return res.arrayBuffer();
-      });
 
-      const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-      const page = pdfDoc.getPages()[0];
+        const cleanedRows = rows
+          .map(function (row) {
+            return {
+              fullName: String(row["Full Name"] || "").trim(),
+              idNumber: String(row["ID Number"] || "").trim()
+            };
+          })
+          .filter(function (row) {
+            return row.fullName && row.idNumber;
+          });
 
-      const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-      const boldFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
-      const textColor = PDFLib.rgb(0.2, 0.2, 0.2);
-      const nameColor = PDFLib.rgb(0.1, 0.1, 0.1);
+        if (!cleanedRows.length) {
+          statusText.textContent = "No valid rows found. Please use headings exactly: Full Name, ID Number";
+          generateBtn.disabled = false;
+          return;
+        }
 
-      const pageWidth = page.getWidth();
-      const pageHeight = page.getHeight();
+        statusText.textContent = "Loading certificate template...";
 
-      const nameSize = 24;
-      const idSize = 20;
-      const dateSize = 16;
+        const templateBytes = await fetch("Mind%20My%20Money%20Certificate%20final%20copy%202%20(1).pdf").then(function (res) {
+          if (!res.ok) {
+            throw new Error("Certificate template could not be loaded.");
+          }
+          return res.arrayBuffer();
+        });
 
-      const nameWidth = boldFont.widthOfTextAtSize(fullName, nameSize);
-      const idWidth = font.widthOfTextAtSize(idNumber, idSize);
-      const dateWidth = font.widthOfTextAtSize(certificateDate, dateSize);
+        const mergedPdf = await PDFLib.PDFDocument.create();
 
-      const nameX = (pageWidth - nameWidth) / 2;
-      const idX = (pageWidth - idWidth) / 2;
+        statusText.textContent = "Generating " + cleanedRows.length + " certificate(s)...";
 
-      const rightMargin = 120;
-      const dateX = pageWidth - dateWidth - rightMargin;
+        for (let i = 0; i < cleanedRows.length; i++) {
+          const row = cleanedRows[i];
+          const templatePdf = await PDFLib.PDFDocument.load(templateBytes);
+          const page = templatePdf.getPages()[0];
 
-      page.drawText(fullName, {
-        x: nameX,
-        y: pageHeight * 0.515,
-        size: nameSize,
-        font: boldFont,
-        color: nameColor
-      });
+          const font = await templatePdf.embedFont(PDFLib.StandardFonts.Helvetica);
+          const boldFont = await templatePdf.embedFont(PDFLib.StandardFonts.HelveticaBold);
+          const textColor = PDFLib.rgb(0.2, 0.2, 0.2);
+          const nameColor = PDFLib.rgb(0.1, 0.1, 0.1);
 
-      page.drawText(idNumber, {
-        x: idX,
-        y: pageHeight * 0.41,
-        size: idSize,
-        font: font,
-        color: textColor
-      });
+          const pageWidth = page.getWidth();
+          const pageHeight = page.getHeight();
 
-      page.drawText(certificateDate, {
-        x: dateX,
-        y: pageHeight * 0.245,
-        size: dateSize,
-        font: font,
-        color: textColor
-      });
+          const nameSize = 24;
+          const idSize = 20;
+          const dateSize = 16;
 
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
+          const fullName = row.fullName;
+          const idNumber = row.idNumber;
 
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fullName + " - Certificate.pdf";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+          const nameWidth = boldFont.widthOfTextAtSize(fullName, nameSize);
+          const idWidth = font.widthOfTextAtSize(idNumber, idSize);
+          const dateWidth = font.widthOfTextAtSize(certificateDate, dateSize);
 
-      URL.revokeObjectURL(url);
-      statusText.textContent = "Certificate generated successfully.";
-    } catch (error) {
-      console.error(error);
-      statusText.textContent = "Something went wrong while generating the certificate.";
-    } finally {
-      generateBtn.disabled = false;
+          const nameX = (pageWidth - nameWidth) / 2;
+          const idX = (pageWidth - idWidth) / 2;
+          const rightMargin = 120;
+          const dateX = pageWidth - dateWidth - rightMargin;
+
+          page.drawText(fullName, {
+            x: nameX,
+            y: pageHeight * 0.515,
+            size: nameSize,
+            font: boldFont,
+            color: nameColor
+          });
+
+          page.drawText(idNumber, {
+            x: idX,
+            y: pageHeight * 0.41,
+            size: idSize,
+            font: font,
+            color: textColor
+          });
+
+          page.drawText(certificateDate, {
+            x: dateX,
+            y: pageHeight * 0.245,
+            size: dateSize,
+            font: font,
+            color: textColor
+          });
+
+          const copiedPages = await mergedPdf.copyPages(templatePdf, [0]);
+          mergedPdf.addPage(copiedPages[0]);
+
+          statusText.textContent = "Generating " + cleanedRows.length + " certificate(s)...\nCompleted: " + (i + 1) + " of " + cleanedRows.length;
+        }
+
+        const mergedPdfBytes = await mergedPdf.save();
+        const blob = new Blob([mergedPdfBytes], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "PM SkillsHouse Certificates.pdf";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        URL.revokeObjectURL(url);
+        statusText.textContent = "Done. " + cleanedRows.length + " certificate(s) generated successfully.";
+      } catch (error) {
+        console.error(error);
+        statusText.textContent = "Something went wrong while generating the bulk PDF.";
+      } finally {
+        generateBtn.disabled = false;
+      }
     }
-  }
 
-  document.getElementById("generateBtn").addEventListener("click", generateCertificate);
-</script>
+    document.getElementById("generateBtn").addEventListener("click", generateBulkCertificates);
+  </script>
 </body>
 </html>
