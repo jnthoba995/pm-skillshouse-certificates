@@ -239,7 +239,7 @@
     }
 
     async function getAccessToken() {
-      const sessionResult = await supabase.auth.getSession();
+      const sessionResult = await window._supabaseClient.auth.getSession();
       const session = sessionResult && sessionResult.data ? sessionResult.data.session : null;
       return session && session.access_token ? session.access_token : null;
     }
@@ -264,7 +264,7 @@
     }
 
     async function logout() {
-      await supabase.auth.signOut();
+      await window._supabaseClient.auth.signOut();
       location.reload();
     }
 
@@ -325,7 +325,7 @@
       const meResult = await fetchAdminMe();
 
       if (meResult.error) {
-        await supabase.auth.signOut();
+        await window._supabaseClient.auth.signOut();
         loginBox.classList.remove("hidden");
         dashboard.classList.add("hidden");
         loginMsg.textContent = meResult.error;
