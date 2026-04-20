@@ -178,10 +178,19 @@
   </div>
 
   <script>
-    const supabase = window.supabase.createClient(
-      "https://xwgdiyiwoaqkwljqfaiy.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3Z2RpeWl3b2Fxa3dsanFmYWl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MDI2MDAsImV4cCI6MjA5MjI3ODYwMH0.w4mH_0Jpu9p_ciDIthYMexC5-nlsw5B1SdYOqOu5vD0"
-    );
+    document.addEventListener("DOMContentLoaded", function () {
+  if (!window.supabase) {
+    console.error("Supabase not loaded");
+    return;
+  }
+
+  const supabase = window.supabase.createClient(
+    "https://xwgdiyiwoaqkwljqfaiy.supabase.co",
+    "YOUR_ANON_KEY_HERE"
+  );
+
+  window._supabaseClient = supabase;
+});
 
     const loginBox = document.getElementById("loginBox");
     const dashboard = document.getElementById("dashboard");
@@ -241,7 +250,7 @@
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
-      const result = await supabase.auth.signInWithPassword({
+      const result = await window._supabaseClient.auth.signInWithPassword({
         email: email,
         password: password
       });
