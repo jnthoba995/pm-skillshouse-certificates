@@ -23,7 +23,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         from: `${senderName || "PM SkillsHouse"} <onboarding@resend.dev>`,
         to: [email],
-        subject: subject: (subject || "Your Certificate of Attendance") + " - " + name,
+        subject: subject || "Your Certificate of Attendance",
         html: `
           <div style="font-family: Arial, sans-serif; line-height: 1.6;">
             <h2>Congratulations ${name}</h2>
