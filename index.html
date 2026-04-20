@@ -4,6 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PM SkillsHouse Certificates</title>
+
+    async function logCertificateRunSafe(data) {
+      try {
+        await fetch("/api/log-run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+      } catch (err) {
+        console.log("Log run skipped (non-blocking):", err);
+      }
+    }
+
   <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
