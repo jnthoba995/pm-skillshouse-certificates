@@ -229,6 +229,34 @@
       line-height: 1.5;
     }
 
+    .delivery-option.disabled-option {
+      opacity: 0.78;
+      background: #f8fafc;
+    }
+
+    .coming-soon-badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #ede9fe;
+      color: #5b21b6;
+      font-size: 11px;
+      font-weight: 700;
+      vertical-align: middle;
+    }
+
+    .add-on-note {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
     .summary-line {
       margin-top: 8px;
       font-size: 13px;
@@ -288,13 +316,23 @@
           </div>
         </label>
 
-        <label class="delivery-option">
-          <input id="deliveryEmail" type="checkbox" />
+        <label class="delivery-option disabled-option">
+          <input id="deliveryEmail" type="checkbox" disabled />
           <div>
-            <div class="delivery-option-title">Send by email</div>
-            <div class="delivery-option-text">Send each participant their own certificate directly.</div>
+            <div class="delivery-option-title">
+              Send by email
+              <span class="coming-soon-badge">Coming Soon</span>
+            </div>
+            <div class="delivery-option-text">
+              Send each participant their own certificate directly as an optional add-on.
+            </div>
           </div>
         </label>
+      </div>
+
+      <div class="add-on-note">
+        <strong>Email delivery add-on:</strong> This feature is kept visible for future rollout and proposal costing.
+        It requires verified email sending setup and domain configuration before it can be activated.
       </div>
     </div>
 
@@ -321,7 +359,7 @@ PM Skillshouse</textarea>
       <strong>Expected Excel headings for current version:</strong><br />
       Full Name<br />
       ID Number<br />
-      Email (only required for email sending)
+      Email (reserved for future email delivery add-on)
     </div>
 
     <div class="note">Using the uploaded Mind My Money certificate template</div>
@@ -329,24 +367,23 @@ PM Skillshouse</textarea>
 
   <script>
     function updateEmailBoxVisibility() {
-      const emailSelected = document.getElementById("deliveryEmail").checked;
       const emailBox = document.getElementById("emailBox");
-      emailBox.style.display = emailSelected ? "block" : "none";
+      emailBox.style.display = "none";
     }
 
     function getSelectedDeliveryOptions() {
       return {
         merged: document.getElementById("deliveryMerged").checked,
         separate: document.getElementById("deliverySeparate").checked,
-        email: document.getElementById("deliveryEmail").checked
+        email: false
       };
     }
 
     function validateDeliveryOptions() {
       const options = getSelectedDeliveryOptions();
 
-      if (!options.merged && !options.separate && !options.email) {
-        throw new Error("Please choose at least one delivery method.");
+      if (!options.merged && !options.separate) {
+        throw new Error("Please choose at least one active delivery method.");
       }
 
       return options;
@@ -359,17 +396,12 @@ PM Skillshouse</textarea>
         .trim();
     }
 
-    function arrayBufferToBase64(buffer) {
-      let binary = "";
-      const bytes = new Uint8Array(buffer);
-      const chunkSize = 0x8000;
-
-      for (let i = 0; i < bytes.length; i += chunkSize) {
-        const chunk = bytes.subarray(i, i + chunkSize);
-        binary += String.fromCharCode.apply(null, chunk);
-      }
-
-      return btoa(binary);
+    function readDeliveryOptionLabels() {
+      const labels = [];
+      if (document.getElementById("deliveryMerged").checked) labels.push("Merged PDF");
+      if (document.getElementById("deliverySeparate").checked) labels.push("Separate PDFs");
+      labels.push("Email (Coming Soon)");
+      return labels;
     }
 
     async function readExcelRows() {
@@ -503,12 +535,7 @@ PM Skillshouse</textarea>
       const previewBox = document.getElementById("previewBox");
       const previewCount = document.getElementById("previewCount");
       const previewList = document.getElementById("previewList");
-      const options = getSelectedDeliveryOptions();
-
-      const selectedMethods = [];
-      if (options.merged) selectedMethods.push("Merged PDF");
-      if (options.separate) selectedMethods.push("Separate PDFs");
-      if (options.email) selectedMethods.push("Email");
+      const selectedMethods = readDeliveryOptionLabels();
 
       previewCount.innerHTML =
         "Valid rows found: " + result.originalCount + "<br>" +
@@ -521,11 +548,9 @@ PM Skillshouse</textarea>
           "</span><br><span class='muted-text'>Only unique records will be used for certificate generation.</span>";
       }
 
-      if (options.email) {
-        previewCount.innerHTML +=
-          "<br><span class='success-text'>Email-ready records: " + result.emailEligibleCount + "</span>" +
-          "<br><span class='muted-text'>Rows missing email: " + result.emailMissingCount + "</span>";
-      }
+      previewCount.innerHTML +=
+        "<br><span class='muted-text'>Email-ready rows in file: " + result.emailEligibleCount +
+        " | Missing email: " + result.emailMissingCount + "</span>";
 
       previewCount.innerHTML +=
         "<div class='summary-line'><strong>Delivery selected:</strong> " +
@@ -535,12 +560,8 @@ PM Skillshouse</textarea>
       previewList.innerHTML = "";
 
       result.rows.slice(0, 5).forEach(function (row) {
-        let extra = row.idNumber;
-        if (options.email && row.email) {
-          extra += " — " + row.email;
-        }
         const li = document.createElement("li");
-        li.textContent = row.fullName + " — " + extra;
+        li.textContent = row.fullName + " — " + row.idNumber;
         previewList.appendChild(li);
       });
 
@@ -587,38 +608,6 @@ PM Skillshouse</textarea>
       }
     }
 
-    async function sendCertificateEmail(row, pdfBytes, certificateDate) {
-      const senderName = document.getElementById("senderName").value.trim() || "PM Skillshouse";
-      const subject = document.getElementById("emailSubject").value.trim() || "Your Certificate of Attendance";
-      const message = document.getElementById("emailMessage").value.trim() || "Please find your certificate attached.";
-
-      const pdfBase64 = arrayBufferToBase64(pdfBytes);
-
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email: row.email,
-          name: row.fullName,
-          pdfBase64: pdfBase64,
-          subject: subject,
-          message: message,
-          senderName: senderName,
-          certificateDate: certificateDate
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Email sending failed");
-      }
-
-      return data;
-    }
-
     async function generateBulkCertificates() {
       const statusText = document.getElementById("statusText");
       const previewBtn = document.getElementById("previewBtn");
@@ -633,17 +622,9 @@ PM Skillshouse</textarea>
         const result = await readExcelRows();
         showPreviewSummary(result);
 
-        if (options.email && result.emailEligibleCount === 0) {
-          throw new Error("Email delivery was selected, but no valid Email values were found in the Excel file.");
-        }
-
         const templateBytes = await loadTemplateBytes();
         let mergedPdf = null;
         let zip = null;
-
-        let emailsSent = 0;
-        let emailSkipped = 0;
-        let emailFailed = 0;
 
         if (options.merged) {
           mergedPdf = await PDFLib.PDFDocument.create();
@@ -673,20 +654,6 @@ PM Skillshouse</textarea>
           if (options.separate) {
             const safeName = sanitizeFileName(row.fullName) || ("Certificate " + (i + 1));
             zip.file(safeName + " - Certificate.pdf", singlePdfBytes);
-          }
-
-          if (options.email) {
-            if (row.email) {
-              try {
-                await sendCertificateEmail(row, singlePdfBytes, result.certificateDate);
-                emailsSent += 1;
-              } catch (emailError) {
-                console.error(emailError);
-                emailFailed += 1;
-              }
-            } else {
-              emailSkipped += 1;
-            }
           }
 
           statusText.textContent =
@@ -726,13 +693,7 @@ PM Skillshouse</textarea>
         const completedActions = [];
         if (options.merged) completedActions.push("merged PDF downloaded");
         if (options.separate) completedActions.push("ZIP of separate PDFs downloaded");
-        if (options.email) {
-          completedActions.push(
-            "emails sent: " + emailsSent +
-            ", skipped: " + emailSkipped +
-            ", failed: " + emailFailed
-          );
-        }
+        completedActions.push("email delivery kept visible as Coming Soon add-on");
 
         statusText.textContent =
           "Done. " + result.rows.length + " certificate(s) processed successfully.\n" +
@@ -752,11 +713,6 @@ PM Skillshouse</textarea>
         readExcelRows().then(showPreviewSummary).catch(function () {});
       }
     }
-
-    document.getElementById("deliveryEmail").addEventListener("change", function () {
-      updateEmailBoxVisibility();
-      refreshPreviewIfVisible();
-    });
 
     document.getElementById("deliveryMerged").addEventListener("change", refreshPreviewIfVisible);
     document.getElementById("deliverySeparate").addEventListener("change", refreshPreviewIfVisible);
