@@ -361,19 +361,19 @@
       <div class="section-title">Select Client / Certificate Template</div>
 
       <div class="client-grid">
-        <div class="client-card active" data-client="pm">
+        <div class="client-card pending" data-client="pm">
           <div class="client-name">PM Skillshouse</div>
+          <div class="client-sub">Template setup pending</div>
+        </div>
+
+        <div class="client-card active" data-client="liberty">
+          <div class="client-name">Liberty</div>
           <div class="client-sub">Active template</div>
         </div>
 
         <div class="client-card" data-client="stanlib">
           <div class="client-name">STANLIB</div>
           <div class="client-sub">Active template</div>
-        </div>
-
-        <div class="client-card pending" data-client="liberty">
-          <div class="client-name">Liberty</div>
-          <div class="client-sub">Template setup pending</div>
         </div>
 
         <div class="client-card pending" data-client="alexforbes">
@@ -388,7 +388,7 @@
       </div>
 
       <div id="templateNote" class="template-note">
-        PM Skillshouse template selected.
+        Liberty template selected.
       </div>
     </div>
 
@@ -485,7 +485,7 @@ PM Skillshouse</textarea>
   </div>
 
   <script>
-    let selectedClient = "pm";
+    let selectedClient = "liberty";
 
     function updateEmailBoxVisibility() {
       const emailBox = document.getElementById("emailBox");
@@ -528,8 +528,8 @@ PM Skillshouse</textarea>
     function updateTemplateNote() {
       const templateNote = document.getElementById("templateNote");
 
-      if (selectedClient === "pm") {
-        templateNote.textContent = "PM Skillshouse template selected.";
+      if (selectedClient === "liberty") {
+        templateNote.textContent = "Liberty template selected.";
         return;
       }
 
@@ -538,8 +538,8 @@ PM Skillshouse</textarea>
         return;
       }
 
-      if (selectedClient === "liberty") {
-        templateNote.textContent = "Liberty is visible in the parallel setup, but its certificate template is not loaded yet.";
+      if (selectedClient === "pm") {
+        templateNote.textContent = "PM Skillshouse is visible in the parallel setup, but its certificate template is not loaded yet.";
         return;
       }
 
@@ -621,12 +621,12 @@ PM Skillshouse</textarea>
     async function loadTemplateBytes() {
       let filePath = "";
 
-      if (selectedClient === "pm") {
+      if (selectedClient === "liberty") {
         filePath = "Mind%20My%20Money%20Certificate%20final%20copy%202%20(1).pdf";
       } else if (selectedClient === "stanlib") {
         filePath = "Stanlib%20CFE%20certificate%202023.pdf";
-      } else if (selectedClient === "liberty") {
-        throw new Error("Liberty template is not loaded yet.");
+      } else if (selectedClient === "pm") {
+        throw new Error("PM Skillshouse template is not loaded yet.");
       } else if (selectedClient === "alexforbes") {
         throw new Error("Alexforbes template is not loaded yet.");
       } else {
@@ -724,9 +724,9 @@ PM Skillshouse</textarea>
       const previewList = document.getElementById("previewList");
       const selectedMethods = readDeliveryOptionLabels();
 
-      let clientLabel = "PM Skillshouse";
+      let clientLabel = "Liberty";
+      if (selectedClient === "pm") clientLabel = "PM Skillshouse";
       if (selectedClient === "stanlib") clientLabel = "STANLIB";
-      if (selectedClient === "liberty") clientLabel = "Liberty";
       if (selectedClient === "alexforbes") clientLabel = "Alexforbes";
       if (selectedClient === "sanlam") clientLabel = "Sanlam";
 
