@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PM SkillsHouse Certificates</title>
 
+    // Safe logging helper
     async function logCertificateRunSafe(data) {
       try {
         await fetch("/api/log-run", {
@@ -905,6 +906,23 @@ PM Skillshouse</textarea>
         statusText.textContent =
           "Done. " + result.rows.length + " certificate(s) processed successfully.\n" +
           completedActions.join(" + ") + ".";
+
+        // Safe metadata logging (non-blocking)
+        try {
+          const deliveryTypes = [];
+          if (options.merged) deliveryTypes.push("merged_pdf");
+          if (options.separate) deliveryTypes.push("zip");
+
+          logCertificateRunSafe({
+            client: selectedClient,
+            certificate_count: result.rows.length,
+            delivery_types: deliveryTypes,
+            source: "web"
+          });
+        } catch (e) {
+          console.log("Logging skipped");
+        }
+
       } catch (error) {
         console.error(error);
         statusText.textContent = error.message || "Something went wrong while processing the certificates.";
