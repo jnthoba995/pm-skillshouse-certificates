@@ -25,18 +25,11 @@
 
     .container {
       width: 100%;
-      max-width: 640px;
+      max-width: 720px;
       background: #ffffff;
       border-radius: 18px;
       padding: 40px 32px;
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
-    }
-
-    h1 {
-      margin: 0 0 10px;
-      font-size: 34px;
-      color: #1f2937;
-      text-align: center;
     }
 
     p {
@@ -67,7 +60,7 @@
 
     input:focus,
     textarea:focus {
-      border-color: #4f46e5;
+      border-color: #f97316;
     }
 
     .file-wrap {
@@ -85,6 +78,87 @@
 
     input[type="file"] {
       padding: 12px;
+    }
+
+    .logo-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 0 0 18px;
+    }
+
+    .brand-logo {
+      width: 100%;
+      max-width: 390px;
+      height: auto;
+      display: block;
+    }
+
+    .client-section {
+      margin-bottom: 20px;
+    }
+
+    .client-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .client-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px;
+      background: #ffffff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .client-card:hover {
+      border-color: #f97316;
+    }
+
+    .client-card.active {
+      border-color: #f97316;
+      background: #fff7ed;
+      box-shadow: 0 6px 14px rgba(249, 115, 22, 0.12);
+    }
+
+    .client-card.pending {
+      background: #fffbeb;
+      border-color: #fde68a;
+    }
+
+    .client-card.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: #f9fafb;
+    }
+
+    .client-card.disabled .client-sub {
+      color: #b45309;
+      font-weight: 600;
+    }
+
+    .client-name {
+      font-weight: 700;
+      color: #111827;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .client-sub {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .template-note {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      font-size: 12px;
+      line-height: 1.6;
     }
 
     .buttons {
@@ -105,23 +179,24 @@
     }
 
     .btn-primary {
-  background: #f97316;
-  color: white;
-  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.25);
-}
+      background: #f97316;
+      color: white;
+      box-shadow: 0 6px 16px rgba(249, 115, 22, 0.25);
+    }
 
-.btn-primary:hover {
-  background: #ea580c;
-}
+    .btn-primary:hover {
+      background: #ea580c;
+    }
 
-   .btn-secondary {
-  background: #fff7ed;
-  color: #c2410c;
-}
+    .btn-secondary {
+      background: #fff7ed;
+      color: #c2410c;
+    }
 
-.btn-secondary:hover {
-  background: #ffedd5;
-}
+    .btn-secondary:hover {
+      background: #ffedd5;
+    }
+
     button:disabled {
       opacity: 0.7;
       cursor: not-allowed;
@@ -214,6 +289,7 @@
       width: auto;
       margin: 4px 0 0;
       transform: scale(1.15);
+      accent-color: #f97316;
     }
 
     .delivery-option-title {
@@ -239,8 +315,8 @@
       margin-left: 8px;
       padding: 2px 8px;
       border-radius: 999px;
-      background: #ede9fe;
-      color: #5b21b6;
+      background: #ffedd5;
+      color: #c2410c;
       font-size: 11px;
       font-weight: 700;
       vertical-align: middle;
@@ -257,19 +333,6 @@
       line-height: 1.6;
     }
 
-    .logo-wrap {
-  display: flex;
-  justify-content: center;
-  margin: 0 0 18px;
-}
-
-.brand-logo {
-  width: 100%;
-  max-width: 420px;
-  height: auto;
-  display: block;
-}
-
     .summary-line {
       margin-top: 8px;
       font-size: 13px;
@@ -277,8 +340,13 @@
     }
 
     @media (max-width: 640px) {
-      .buttons {
+      .buttons,
+      .client-grid {
         grid-template-columns: 1fr;
+      }
+
+      .container {
+        padding: 28px 20px;
       }
     }
   </style>
@@ -286,8 +354,44 @@
 <body>
   <div class="container">
     <div class="logo-wrap">
-  <img src="assets/pm-skillshouse-logo.png" alt="PM Skillshouse" class="brand-logo" />
-</div>
+      <img src="assets/pm-skillshouse-logo.png" alt="PM Skillshouse" class="brand-logo" />
+    </div>
+
+    <div class="client-section">
+      <div class="section-title">Select Client / Certificate Template</div>
+
+      <div class="client-grid">
+        <div class="client-card active" data-client="pm">
+          <div class="client-name">PM Skillshouse</div>
+          <div class="client-sub">Active template</div>
+        </div>
+
+        <div class="client-card" data-client="stanlib">
+          <div class="client-name">STANLIB</div>
+          <div class="client-sub">Active template</div>
+        </div>
+
+        <div class="client-card pending" data-client="liberty">
+          <div class="client-name">Liberty</div>
+          <div class="client-sub">Template setup pending</div>
+        </div>
+
+        <div class="client-card pending" data-client="alexforbes">
+          <div class="client-name">Alexforbes</div>
+          <div class="client-sub">Template setup pending</div>
+        </div>
+
+        <div class="client-card disabled" data-client="sanlam">
+          <div class="client-name">Sanlam</div>
+          <div class="client-sub">Coming Soon</div>
+        </div>
+      </div>
+
+      <div id="templateNote" class="template-note">
+        PM Skillshouse template selected.
+      </div>
+    </div>
+
     <p>Upload your Excel file, preview one certificate, choose delivery options, then process the final certificates.</p>
 
     <div class="file-wrap">
@@ -364,7 +468,7 @@
 
 Please find your certificate attached.
 
-Thank you for attending the Mind My Money Workshop.
+Thank you for attending the workshop.
 
 Regards,
 PM Skillshouse</textarea>
@@ -377,10 +481,12 @@ PM Skillshouse</textarea>
       Email (reserved for future email delivery add-on)
     </div>
 
-    <div class="note">Using the uploaded Mind My Money certificate template</div>
+    <div class="note">One certificate engine for multiple PM Skillshouse client templates.</div>
   </div>
 
   <script>
+    let selectedClient = "pm";
+
     function updateEmailBoxVisibility() {
       const emailBox = document.getElementById("emailBox");
       emailBox.style.display = "none";
@@ -417,6 +523,34 @@ PM Skillshouse</textarea>
       if (document.getElementById("deliverySeparate").checked) labels.push("Separate PDFs");
       labels.push("Email (Coming Soon)");
       return labels;
+    }
+
+    function updateTemplateNote() {
+      const templateNote = document.getElementById("templateNote");
+
+      if (selectedClient === "pm") {
+        templateNote.textContent = "PM Skillshouse template selected.";
+        return;
+      }
+
+      if (selectedClient === "stanlib") {
+        templateNote.textContent = "STANLIB template selected.";
+        return;
+      }
+
+      if (selectedClient === "liberty") {
+        templateNote.textContent = "Liberty is visible in the parallel setup, but its certificate template is not loaded yet.";
+        return;
+      }
+
+      if (selectedClient === "alexforbes") {
+        templateNote.textContent = "Alexforbes is visible in the parallel setup, but its certificate template is not loaded yet.";
+        return;
+      }
+
+      if (selectedClient === "sanlam") {
+        templateNote.textContent = "Sanlam template is coming soon.";
+      }
     }
 
     async function readExcelRows() {
@@ -485,13 +619,51 @@ PM Skillshouse</textarea>
     }
 
     async function loadTemplateBytes() {
-      const response = await fetch("Mind%20My%20Money%20Certificate%20final%20copy%202%20(1).pdf");
+      let filePath = "";
+
+      if (selectedClient === "pm") {
+        filePath = "Mind%20My%20Money%20Certificate%20final%20copy%202%20(1).pdf";
+      } else if (selectedClient === "stanlib") {
+        filePath = "Stanlib%20CFE%20certificate%202023.pdf";
+      } else if (selectedClient === "liberty") {
+        throw new Error("Liberty template is not loaded yet.");
+      } else if (selectedClient === "alexforbes") {
+        throw new Error("Alexforbes template is not loaded yet.");
+      } else {
+        throw new Error("Selected template is not available yet.");
+      }
+
+      const response = await fetch(filePath);
 
       if (!response.ok) {
         throw new Error("Certificate template could not be loaded.");
       }
 
       return await response.arrayBuffer();
+    }
+
+    function getTemplateSettings() {
+      if (selectedClient === "stanlib") {
+        return {
+          nameYRatio: 0.57,
+          idYRatio: 0.43,
+          dateYRatio: 0.18,
+          nameSize: 24,
+          idSize: 18,
+          dateSize: 15,
+          rightMargin: 105
+        };
+      }
+
+      return {
+        nameYRatio: 0.515,
+        idYRatio: 0.41,
+        dateYRatio: 0.245,
+        nameSize: 24,
+        idSize: 20,
+        dateSize: 16,
+        rightMargin: 120
+      };
     }
 
     async function buildSingleCertificatePdf(templateBytes, fullName, idNumber, certificateDate) {
@@ -505,10 +677,11 @@ PM Skillshouse</textarea>
 
       const pageWidth = page.getWidth();
       const pageHeight = page.getHeight();
+      const settings = getTemplateSettings();
 
-      const nameSize = 24;
-      const idSize = 20;
-      const dateSize = 16;
+      const nameSize = settings.nameSize;
+      const idSize = settings.idSize;
+      const dateSize = settings.dateSize;
 
       const nameWidth = boldFont.widthOfTextAtSize(fullName, nameSize);
       const idWidth = font.widthOfTextAtSize(idNumber, idSize);
@@ -516,12 +689,11 @@ PM Skillshouse</textarea>
 
       const nameX = (pageWidth - nameWidth) / 2;
       const idX = (pageWidth - idWidth) / 2;
-      const rightMargin = 120;
-      const dateX = pageWidth - dateWidth - rightMargin;
+      const dateX = pageWidth - dateWidth - settings.rightMargin;
 
       page.drawText(fullName, {
         x: nameX,
-        y: pageHeight * 0.515,
+        y: pageHeight * settings.nameYRatio,
         size: nameSize,
         font: boldFont,
         color: nameColor
@@ -529,7 +701,7 @@ PM Skillshouse</textarea>
 
       page.drawText(idNumber, {
         x: idX,
-        y: pageHeight * 0.41,
+        y: pageHeight * settings.idYRatio,
         size: idSize,
         font: font,
         color: textColor
@@ -537,7 +709,7 @@ PM Skillshouse</textarea>
 
       page.drawText(certificateDate, {
         x: dateX,
-        y: pageHeight * 0.245,
+        y: pageHeight * settings.dateYRatio,
         size: dateSize,
         font: font,
         color: textColor
@@ -552,7 +724,14 @@ PM Skillshouse</textarea>
       const previewList = document.getElementById("previewList");
       const selectedMethods = readDeliveryOptionLabels();
 
+      let clientLabel = "PM Skillshouse";
+      if (selectedClient === "stanlib") clientLabel = "STANLIB";
+      if (selectedClient === "liberty") clientLabel = "Liberty";
+      if (selectedClient === "alexforbes") clientLabel = "Alexforbes";
+      if (selectedClient === "sanlam") clientLabel = "Sanlam";
+
       previewCount.innerHTML =
+        "Selected template: " + clientLabel + "<br>" +
         "Valid rows found: " + result.originalCount + "<br>" +
         "Unique records used: " + result.uniqueCount;
 
@@ -729,6 +908,21 @@ PM Skillshouse</textarea>
       }
     }
 
+    document.querySelectorAll(".client-card").forEach(function(card) {
+      card.addEventListener("click", function() {
+        if (card.classList.contains("disabled")) return;
+
+        document.querySelectorAll(".client-card").forEach(function(c) {
+          c.classList.remove("active");
+        });
+
+        card.classList.add("active");
+        selectedClient = card.getAttribute("data-client");
+        updateTemplateNote();
+        refreshPreviewIfVisible();
+      });
+    });
+
     document.getElementById("deliveryMerged").addEventListener("change", refreshPreviewIfVisible);
     document.getElementById("deliverySeparate").addEventListener("change", refreshPreviewIfVisible);
 
@@ -736,6 +930,7 @@ PM Skillshouse</textarea>
     document.getElementById("generateBtn").addEventListener("click", generateBulkCertificates);
 
     updateEmailBoxVisibility();
+    updateTemplateNote();
   </script>
 </body>
 </html>
