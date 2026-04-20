@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PM Skillshouse Admin</title>
-  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -178,19 +178,10 @@
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-  if (!window.supabase) {
-    console.error("Supabase not loaded");
-    return;
-  }
-
-  const supabase = window.supabase.createClient(
-    "https://xwgdiyiwoaqkwljqfaiy.supabase.co",
-    "YOUR_ANON_KEY_HERE"
-  );
-
-  window._supabaseClient = supabase;
-});
+    const supabase = window.supabase.createClient(
+      "https://xwgdiyiwoaqkwljqfaiy.supabase.co",
+      "PASTE_YOUR_REAL_ANON_KEY_HERE"
+    );
 
     const loginBox = document.getElementById("loginBox");
     const dashboard = document.getElementById("dashboard");
@@ -239,7 +230,7 @@
     }
 
     async function getAccessToken() {
-      const sessionResult = await window._supabaseClient.auth.getSession();
+      const sessionResult = await supabase.auth.getSession();
       const session = sessionResult && sessionResult.data ? sessionResult.data.session : null;
       return session && session.access_token ? session.access_token : null;
     }
@@ -250,7 +241,7 @@
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
-      const result = await window._supabaseClient.auth.signInWithPassword({
+      const result = await supabase.auth.signInWithPassword({
         email: email,
         password: password
       });
@@ -264,7 +255,7 @@
     }
 
     async function logout() {
-      await window._supabaseClient.auth.signOut();
+      await supabase.auth.signOut();
       location.reload();
     }
 
@@ -325,7 +316,7 @@
       const meResult = await fetchAdminMe();
 
       if (meResult.error) {
-        await window._supabaseClient.auth.signOut();
+        await supabase.auth.signOut();
         loginBox.classList.remove("hidden");
         dashboard.classList.add("hidden");
         loginMsg.textContent = meResult.error;
