@@ -391,6 +391,50 @@
       color: #991b1b;
     }
 
+
+    .draft-table tbody tr.confidence-low {
+      background: rgba(239, 68, 68, 0.10);
+      box-shadow: inset 3px 0 0 rgba(239, 68, 68, 0.60), 0 0 0 1px rgba(239, 68, 68, 0.15);
+      position: relative;
+    }
+
+    .confidence-badge {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      border-radius: 999px;
+      background: rgba(239, 68, 68, 0.12);
+      color: #991b1b;
+      font-weight: 600;
+    }
+
+
+    .lab-hidden {
+      display: none;
+    }
+
+    .lab-toggle-btn {
+      display: inline-block;
+      margin-bottom: 16px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      background: #111827;
+      color: #ffffff;
+      cursor: pointer;
+    }
+
+    .workspace-expanded {
+      max-width: 1400px;
+      width: 95%;
+    }
+
+    .split-workspace {
+      min-height: 600px;
+    }
+
 </style>
 </head>
 <body>
@@ -400,6 +444,9 @@
       <div class="card">
       <div class="tag">SEPARATE OCR LAB</div>
       <h1>OCR Register Extraction Lab</h1>
+
+<div class="lab-toggle-btn" onclick="toggleLabInfo()">Show details</div>
+
       <p>
         This page is a separate prototype for scanned attendance register extraction.
         It is not yet linked to the live certificate workflow.
@@ -411,19 +458,19 @@
       <div class="grid">
         <div class="mini">
           <strong>Phase 1 goal</strong>
-          <p>Upload a scanned register and convert it into a draft editable table.</p>
+          
         </div>
         <div class="mini">
-          <strong>Human review step</strong>
+          
           <p>Let the user correct unclear names, ID numbers, contact numbers, and emails before export.</p>
         </div>
         <div class="mini">
           <strong>Storage direction</strong>
-          <p>Keep scans temporary, then delete after a retention period once review/export is complete.</p>
+          
         </div>
         <div class="mini">
           <strong>Later integration</strong>
-          <p>When stable, connect reviewed rows into the existing certificate and export flow.</p>
+          
         </div>
       </div>
     </div>
@@ -431,7 +478,7 @@
     <div class="card">
       <h2>Final Excel Export Structure</h2>
       <p>This OCR lab is being built around one final export format so both A3 and A4 extraction can feed the same output later.</p>
-      <div class="draft-table-wrap" style="margin-top:16px;">
+      <div class="draft-table-wrap" style="margin-top:0; display:none;">
         <table style="min-width: 640px;">
           <thead>
             <tr>
@@ -506,7 +553,7 @@
 
     <div class="card">
       <h2>Split Review Workspace</h2>
-      <div class="split-workspace" style="margin-top:16px;">
+      <div class="split-workspace workspace-expanded" style="margin-top:16px;">
         <div class="split-panel">
           <div class="split-panel-header">Scan Preview</div>
           <div id="splitPreviewBody" class="split-panel-body">
@@ -933,7 +980,25 @@
       return "confidence-high";
     }
 
-    function applyConfidenceToRow(row) {
+    
+    function enhanceLowConfidenceRow(row, confidence) {
+      const existing = row.querySelector(".confidence-badge");
+      if (existing) existing.remove();
+
+      if (confidence !== "low") return;
+
+      const cells = row.querySelectorAll("td");
+      const nameCell = cells[1] || null;
+      if (!nameCell) return;
+
+      const badge = document.createElement("span");
+      badge.className = "confidence-badge";
+      badge.textContent = "Needs attention";
+
+      nameCell.appendChild(badge);
+    }
+
+function applyConfidenceToRow(row) {
       if (!row) return;
       row.classList.remove("confidence-high", "confidence-medium", "confidence-low");
 
@@ -945,6 +1010,7 @@
 
       const confidenceClass = getConfidenceClass(confidenceControl.value);
       row.classList.add(confidenceClass);
+      enhanceLowConfidenceRow(row, normalizeConfidence(confidenceControl.value));
 
       confidenceCell.classList.add("confidence-cell");
     }
@@ -970,6 +1036,14 @@
 
       applyConfidenceToRow(row);
     });
+
+
+function toggleLabInfo() {
+  const sections = document.querySelectorAll(".lab-section");
+  sections.forEach(function(el) {
+    el.classList.toggle("lab-hidden");
+  });
+}
 
 </script>
 </body>
