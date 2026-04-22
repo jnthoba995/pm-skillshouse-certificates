@@ -432,6 +432,55 @@
 .ocr-review-card h2 {
   margin-top: 0;
 }
+
+#reviewTable tbody tr[data-confidence="low"] td {
+  background: rgba(239, 68, 68, 0.08);
+}
+#reviewTable tbody tr[data-confidence="medium"] td {
+  background: rgba(245, 158, 11, 0.08);
+}
+#reviewTable tbody tr.issue-active td {
+  box-shadow: inset 0 0 0 2px rgba(37, 99, 235, 0.28);
+}
+#reviewTable tbody tr[data-confidence="low"] input,
+#reviewTable tbody tr[data-confidence="low"] select {
+  border-color: #fca5a5;
+}
+#reviewTable tbody tr[data-confidence="medium"] input,
+#reviewTable tbody tr[data-confidence="medium"] select {
+  border-color: #fcd34d;
+}
+
+#reviewTable tbody tr[data-confidence="low"] td {
+  background: rgba(239, 68, 68, 0.10);
+}
+#reviewTable tbody tr[data-confidence="medium"] td {
+  background: rgba(245, 158, 11, 0.10);
+}
+
+/* STRONGER FIELD SIGNAL */
+#reviewTable tbody tr[data-confidence="low"] input,
+#reviewTable tbody tr[data-confidence="low"] select {
+  border: 2px solid #ef4444;
+  background: #fff5f5;
+}
+
+#reviewTable tbody tr[data-confidence="medium"] input,
+#reviewTable tbody tr[data-confidence="medium"] select {
+  border: 2px solid #f59e0b;
+  background: #fffbeb;
+}
+
+/* ACTIVE ROW */
+#reviewTable tbody tr.issue-active td {
+  box-shadow: inset 0 0 0 2px rgba(37, 99, 235, 0.35);
+}
+
+/* MAKE EMPTY FIELDS STAND OUT */
+#reviewTable input::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
 </style>
 
 
@@ -478,11 +527,11 @@
       
 
 <div style="margin-top:8px;">
-<div id="inlinePreview" style="height:38vh; border:1px solid #e5e7eb; border-radius:12px; overflow:auto; margin-bottom:8px; background:#fff;"></div>
-<h2 style="margin-bottom:8px;">Captured Data Review</h2>
+<div id="inlinePreview" style="height:30vh; border:1px solid #e5e7eb; border-radius:12px; overflow:auto; margin-bottom:8px; background:#fff;"></div>
+<div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px;"><h2 style="margin:0;">Captured Data Review</h2><div style="display:flex; gap:10px; align-items:center;"><button id="jumpIssueBtn" class="btn-secondary" type="button">Jump to Next Issue</button><button id="previewFinalBtn" class="btn-secondary" type="button">Preview Final Document</button></div></div>
 
 <div style="margin-top:12px; width:100%;">
-  <div style="overflow:auto; height:52vh; border:1px solid #e5e7eb; border-radius:12px; width:100%; background:#fff;">
+  <div style="overflow:auto; height:60vh; border:1px solid #e5e7eb; border-radius:12px; width:100%; background:#fff;">
     <table id="reviewTable" style="width:100%; min-width:2200px; table-layout:fixed; border-collapse:collapse;">
       <thead style="background:#f9fafb; position:sticky; top:0; z-index:2;">
         <tr style="border-bottom:1px solid #e5e7eb;">
@@ -505,6 +554,18 @@
     </table>
   </div>
 </div>
+<div id="finalPreviewModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:9999; padding:24px; box-sizing:border-box;">
+  <div style="max-width:1200px; width:100%; height:88vh; margin:0 auto; background:#ffffff; border-radius:18px; box-shadow:0 24px 80px rgba(15,23,42,0.25); display:flex; flex-direction:column; overflow:hidden;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 22px; border-bottom:1px solid #e5e7eb;">
+      <div>
+        <div style="font-size:18px; font-weight:700; color:#1f2937;">Final Document Preview</div>
+        <div style="font-size:13px; color:#6b7280;">Scroll through the extracted register before export.</div>
+      </div>
+      <button id="closeFinalPreviewBtn" class="btn-secondary" type="button">Close</button>
+    </div>
+    <div id="finalPreviewBody" style="flex:1; overflow:auto; background:#f8fafc; padding:24px;"></div>
+  </div>
+</div>
 
         </div>
       </div>
@@ -522,13 +583,18 @@
     const reviewTableBody = document.getElementById("reviewTableBody");
     const registerTypeSelect = document.getElementById("registerType");
     const inlinePreview = document.getElementById("inlinePreview");
+    const previewFinalBtn = document.getElementById("previewFinalBtn");
+    const jumpIssueBtn = document.getElementById("jumpIssueBtn");
+    const finalPreviewModal = document.getElementById("finalPreviewModal");
+    const finalPreviewBody = document.getElementById("finalPreviewBody");
+    const closeFinalPreviewBtn = document.getElementById("closeFinalPreviewBtn");
 
     function buildDraftRow(row, index) {
       const confidence = (row.confidence || "high").toLowerCase();
       const confidenceClass = confidence === "low" ? "confidence-low" : confidence === "medium" ? "confidence-medium" : "confidence-high";
       const reviewStatus = row.reviewStatus || (confidence === "low" ? "Needs review" : "Draft");
       return `
-        <tr class="${confidenceClass}" style="border-bottom:1px solid #f1f5f9;">
+        <tr class="${confidenceClass}" data-confidence="${confidence}" style="border-bottom:1px solid #f1f5f9;">
           <td style="text-align:center; font-size:12px; color:#6b7280; padding:10px;">${index + 1}</td>
           <td style="padding:10px;"><input style="width:100%; padding:10px; font-size:14px; border:1px solid #d1d5db; border-radius:8px;" value="${row.row || ""}" placeholder="Row" /></td>
           <td style="padding:10px;"><input style="width:100%; padding:10px; font-size:14px; border:1px solid #d1d5db; border-radius:8px;" value="${row.name || ""}" placeholder="Name" /></td>
@@ -582,7 +648,43 @@
       `;
     }
 
-    function renderSimulatedRows(registerType) {
+    
+function applyFieldLevelIssues() {
+  const rows = document.querySelectorAll("#reviewTableBody tr");
+
+  rows.forEach((row) => {
+    const inputs = row.querySelectorAll("input");
+    const selects = row.querySelectorAll("select");
+
+    inputs.forEach((input) => {
+      const value = (input.value || "").trim().toLowerCase();
+      const placeholder = (input.placeholder || "").toLowerCase();
+
+      const isEmpty = !value || value === placeholder;
+
+      if (isEmpty) {
+        input.style.border = "2px solid #ef4444";
+        input.style.background = "#fff5f5";
+      } else {
+        input.style.border = "1px solid #d1d5db";
+        input.style.background = "#ffffff";
+      }
+    });
+
+    selects.forEach((select) => {
+      const value = (select.value || "").toLowerCase();
+
+      if (!value || value === "unknown") {
+        select.style.border = "2px solid #ef4444";
+        select.style.background = "#fff5f5";
+      } else {
+        select.style.border = "1px solid #d1d5db";
+        select.style.background = "#ffffff";
+      }
+    });
+  });
+}
+function renderSimulatedRows(registerType) {
       const rows = registerType === "sanlam"
         ? [
             { row: "1", name: "Nomsa", surname: "Dlamini", idNumber: "9001010586088", contact: "0824567890", email: "nomsa@example.com", gender: "Female", employment: "Employed", creditReport: "Yes", financialAdvice: "Yes", confidence: "high", reviewStatus: "Draft" },
@@ -596,7 +698,10 @@
           ];
 
       if (reviewTableBody) {
-        reviewTableBody.innerHTML = rows.map((row, index) => buildDraftRow(row, index)).join("");
+        
+reviewTableBody.innerHTML = rows.map((row, index) => buildDraftRow(row, index)).join("");
+setTimeout(() => applyFieldLevelIssues(), 50);
+
       }
       if (draftTableBody) {
         draftTableBody.innerHTML = "";
@@ -656,6 +761,110 @@ setTimeout(() => {
       }
       ocrStatus.textContent = "Preview loaded.";
     });
+
+    function buildFinalPreviewHtml() {
+      const rows = Array.from(document.querySelectorAll("#reviewTableBody tr"));
+      const rowHtml = rows.map((tr, index) => {
+        const inputs = Array.from(tr.querySelectorAll("input"));
+        const selects = Array.from(tr.querySelectorAll("select"));
+        const val = (el) => el ? (el.value || "").trim() : "";
+        return `
+          <tr>
+            <td style="border:1px solid #d1d5db; padding:10px; text-align:center;">${index + 1}</td>
+            <td style="border:1px solid #d1d5db; padding:10px;">${val(inputs[0])}</td>
+            <td style="border:1px solid #d1d5db; padding:10px;">${val(inputs[1])}</td>
+            <td style="border:1px solid #d1d5db; padding:10px;">${val(inputs[2])}</td>
+            <td style="border:1px solid #d1d5db; padding:10px;">${val(inputs[3])}</td>
+            <td style="border:1px solid #d1d5db; padding:10px;">${val(inputs[4])}</td>
+            <td style="border:1px solid #d1d5db; padding:10px;">${val(inputs[5])}</td>
+            <td style="border:1px solid #d1d5db; padding:10px;">${val(selects[0])}</td>
+            <td style="border:1px solid #d1d5db; padding:10px;">${val(selects[1])}</td>
+            <td style="border:1px solid #d1d5db; padding:10px;">${val(selects[2])}</td>
+            <td style="border:1px solid #d1d5db; padding:10px;">${val(selects[3])}</td>
+            <td style="border:1px solid #d1d5db; padding:10px;">${val(selects[4])}</td>
+            <td style="border:1px solid #d1d5db; padding:10px;">${val(selects[5])}</td>
+          </tr>
+        `;
+      }).join("");
+
+      return `
+        <div style="max-width:1100px; margin:0 auto; background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:24px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px;">
+            <div>
+              <div style="font-size:22px; font-weight:700; color:#111827;">OCR Register Draft Preview</div>
+              <div style="font-size:13px; color:#6b7280;">Document-style view of the captured data sheet</div>
+            </div>
+            <div style="font-size:13px; color:#6b7280;">Rows: ${rows.length}</div>
+          </div>
+          <div style="overflow:auto;">
+            <table style="width:100%; min-width:1600px; border-collapse:collapse; font-size:13px; color:#111827;">
+              <thead>
+                <tr style="background:#f9fafb;">
+                  <th style="border:1px solid #d1d5db; padding:10px;">#</th>
+                  <th style="border:1px solid #d1d5db; padding:10px;">Row</th>
+                  <th style="border:1px solid #d1d5db; padding:10px;">Name</th>
+                  <th style="border:1px solid #d1d5db; padding:10px;">Surname</th>
+                  <th style="border:1px solid #d1d5db; padding:10px;">ID Number / DOB</th>
+                  <th style="border:1px solid #d1d5db; padding:10px;">Contact Number</th>
+                  <th style="border:1px solid #d1d5db; padding:10px;">Email Address</th>
+                  <th style="border:1px solid #d1d5db; padding:10px;">Gender</th>
+                  <th style="border:1px solid #d1d5db; padding:10px;">Employment</th>
+                  <th style="border:1px solid #d1d5db; padding:10px;">Credit Report</th>
+                  <th style="border:1px solid #d1d5db; padding:10px;">Financial Advice</th>
+                  <th style="border:1px solid #d1d5db; padding:10px;">Confidence</th>
+                  <th style="border:1px solid #d1d5db; padding:10px;">Review Status</th>
+                </tr>
+              </thead>
+              <tbody>${rowHtml}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    if (previewFinalBtn) previewFinalBtn.addEventListener("click", function () {
+      if (!finalPreviewBody || !finalPreviewModal) return;
+      finalPreviewBody.innerHTML = buildFinalPreviewHtml();
+      finalPreviewModal.style.display = "block";
+    });
+
+    if (closeFinalPreviewBtn) closeFinalPreviewBtn.addEventListener("click", function () {
+      if (finalPreviewModal) finalPreviewModal.style.display = "none";
+    });
+
+    if (finalPreviewModal) finalPreviewModal.addEventListener("click", function (event) {
+      if (event.target === finalPreviewModal) {
+        finalPreviewModal.style.display = "none";
+      }
+    });
+
+    function jumpToNextIssue() {
+      const rows = Array.from(document.querySelectorAll('#reviewTableBody tr'));
+      if (!rows.length) return;
+
+      const current = document.querySelector('#reviewTableBody tr.issue-active');
+      let startIndex = current ? rows.indexOf(current) + 1 : 0;
+
+      rows.forEach((row) => row.classList.remove('issue-active'));
+
+      for (let offset = 0; offset < rows.length; offset++) {
+        const idx = (startIndex + offset) % rows.length;
+        const row = rows[idx];
+        const confidence = (row.getAttribute('data-confidence') || '').toLowerCase();
+        const reviewSelect = row.querySelectorAll('select')[5];
+        const reviewValue = reviewSelect ? (reviewSelect.value || '').toLowerCase() : '';
+
+        if (confidence === 'low' || confidence === 'medium' || reviewValue === 'needs review') {
+          row.classList.add('issue-active');
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const firstInput = row.querySelector('input, select');
+          if (firstInput) firstInput.focus();
+          return;
+        }
+      }
+    }
+
+    if (jumpIssueBtn) jumpIssueBtn.addEventListener('click', jumpToNextIssue);
 
 
 function toggleLabInfo() {
