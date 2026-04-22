@@ -576,7 +576,7 @@
           
           <div class="split-panel-body">
             <div class="draft-table-wrap" style="height:100%; overflow:auto;">
-              <table style="width:100%; font-size:14px;">
+              <table class="draft-table" style="width:100%; font-size:14px;">
                 <thead>
                   <tr>
                     <th>Row</th>
@@ -1025,7 +1025,7 @@ function applyConfidenceToRow(row) {
     }
 
     function applyConfidenceStylingToDraftTable() {
-      const rows = document.querySelectorAll(".draft-table tbody tr");
+      const rows = document.querySelectorAll("#draftTableBody tr");
       rows.forEach(applyConfidenceToRow);
     }
 
