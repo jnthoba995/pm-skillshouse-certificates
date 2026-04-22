@@ -503,7 +503,7 @@
           </tbody>
         </table>
       </div>
-      <div class="muted-note">
+      <div class="muted-note" style="display:none;">
         Later, A3 extraction will populate the base list first, and A4 forms will enrich or confirm the same rows before final Excel export.
       </div>
     </div>
@@ -554,7 +554,7 @@
     <div class="card">
       <h2>Split Review Workspace</h2>
       <div class="split-workspace workspace-expanded" style="margin-top:0; height: calc(100vh - 120px);">
-        <div class="split-panel">
+        <div class="split-panel" style="border:none; box-shadow:none; background:transparent;">
           <div class="split-panel-header">Scan Preview</div>
           <div id="splitPreviewBody" class="split-panel-body">
             <div class="split-preview-empty">
@@ -563,11 +563,11 @@
           </div>
         </div>
 
-        <div class="split-panel">
-          <div class="split-panel-header">Draft extracted rows</div>
+        <div class="split-panel" style="border:none; box-shadow:none; background:transparent;">
+          
           <div class="split-panel-body">
             <div class="draft-table-wrap" style="height:100%; overflow:auto;">
-              <table>
+              <table style="width:100%; font-size:14px;">
                 <thead>
                   <tr>
                     <th>Row</th>
@@ -638,7 +638,7 @@
                 </tbody>
               </table>
             </div>
-            <div class="muted-note">
+            <div class="muted-note" style="display:none;">
               This table represents the intended final Excel structure. Later, A3 extraction will populate the participant list first, then A4 matching will enrich these rows before export.
             </div>
           </div>
