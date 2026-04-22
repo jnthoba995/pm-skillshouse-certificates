@@ -958,6 +958,24 @@
       const selectedType = registerTypeSelect ? registerTypeSelect.value : "auto";
 
       renderSplitPreview();
+    setTimeout(() => {
+      const rows = document.querySelectorAll("#draftTableBody tr");
+      rows.forEach((row) => {
+        const cells = row.querySelectorAll("td");
+        const confidenceCell = cells[10];
+        if (!confidenceCell) return;
+        const select = confidenceCell.querySelector("select");
+        if (!select) return;
+
+        const value = select.value.toLowerCase();
+        row.classList.remove("confidence-high","confidence-medium","confidence-low");
+
+        if (value === "low") row.classList.add("confidence-low");
+        else if (value === "medium") row.classList.add("confidence-medium");
+        else row.classList.add("confidence-high");
+      });
+    }, 100);
+
       renderSimulatedRows(selectedType);
 
       ocrStatus.textContent =
