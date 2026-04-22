@@ -701,7 +701,10 @@ function renderSimulatedRows(registerType) {
       if (reviewTableBody) {
         
 reviewTableBody.innerHTML = rows.map((row, index) => buildDraftRow(row, index)).join("");
-setTimeout(() => applyFieldLevelIssues(), 50);
+setTimeout(() => {
+  applyFieldLevelIssues();
+  bindAutoReview();
+}, 50);
 
       }
       if (draftTableBody) {
@@ -863,6 +866,51 @@ setTimeout(() => {
           return;
         }
       }
+    }
+
+    function updateRowReviewState(row) {
+      if (!row) return;
+
+      const inputs = Array.from(row.querySelectorAll('input'));
+      const selects = Array.from(row.querySelectorAll('select'));
+      const reviewSelect = selects[5];
+      const requiredInputs = inputs.slice(0, 6);
+      const requiredSelects = selects.slice(0, 4);
+
+      const inputOk = requiredInputs.every((input) => {
+        const value = (input.value || '').trim().toLowerCase();
+        const placeholder = ((input.getAttribute('placeholder') || '')).trim().toLowerCase();
+        return value && value !== placeholder;
+      });
+
+      const selectOk = requiredSelects.every((select) => {
+        const value = (select.value || '').trim().toLowerCase();
+        return value && value !== 'unknown';
+      });
+
+      if (reviewSelect) {
+        if (inputOk && selectOk) {
+          reviewSelect.value = 'Reviewed';
+        } else if (reviewSelect.value === 'Reviewed') {
+          reviewSelect.value = 'Needs review';
+        }
+      }
+    }
+
+    function bindAutoReview() {
+      const rows = Array.from(document.querySelectorAll('#reviewTableBody tr'));
+      rows.forEach((row) => {
+        const fields = row.querySelectorAll('input, select');
+        fields.forEach((field) => {
+          field.addEventListener('input', function () {
+            updateRowReviewState(row);
+          });
+          field.addEventListener('change', function () {
+            updateRowReviewState(row);
+          });
+        });
+        updateRowReviewState(row);
+      });
     }
 
     function getFocusableIssueFields() {
