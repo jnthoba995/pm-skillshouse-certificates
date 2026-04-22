@@ -528,7 +528,7 @@
 
 <div style="margin-top:8px;">
 <div id="inlinePreview" style="height:30vh; border:1px solid #e5e7eb; border-radius:12px; overflow:auto; margin-bottom:8px; background:#fff;"></div>
-<div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px;"><h2 style="margin:0;">Captured Data Review</h2><div style="display:flex; gap:10px; align-items:center;"><button id="jumpIssueBtn" class="btn-secondary" type="button">Jump to Next Issue</button><button id="previewFinalBtn" class="btn-secondary" type="button">Preview Final Document</button></div></div>
+<div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px;"><h2 style="margin:0;">Captured Data Review</h2><div style="display:flex; gap:10px; align-items:center;"><button id="focusEmptyBtn" class="btn-secondary" type="button">Go to Next Empty Field</button><button id="jumpIssueBtn" class="btn-secondary" type="button">Jump to Next Issue</button><button id="previewFinalBtn" class="btn-secondary" type="button">Preview Final Document</button></div></div>
 
 <div style="margin-top:12px; width:100%;">
   <div style="overflow:auto; height:60vh; border:1px solid #e5e7eb; border-radius:12px; width:100%; background:#fff;">
@@ -584,6 +584,7 @@
     const registerTypeSelect = document.getElementById("registerType");
     const inlinePreview = document.getElementById("inlinePreview");
     const previewFinalBtn = document.getElementById("previewFinalBtn");
+    const focusEmptyBtn = document.getElementById("focusEmptyBtn");
     const jumpIssueBtn = document.getElementById("jumpIssueBtn");
     const finalPreviewModal = document.getElementById("finalPreviewModal");
     const finalPreviewBody = document.getElementById("finalPreviewBody");
@@ -864,6 +865,39 @@ setTimeout(() => {
       }
     }
 
+    function getFocusableIssueFields() {
+      const fields = Array.from(document.querySelectorAll('#reviewTableBody input, #reviewTableBody select'));
+      return fields.filter((field) => {
+        const value = (field.value || '').trim().toLowerCase();
+        const placeholder = ((field.getAttribute('placeholder') || '')).trim().toLowerCase();
+        if (field.tagName === 'SELECT') {
+          return !value || value === 'unknown';
+        }
+        return !value || value === placeholder;
+      });
+    }
+
+    function focusNextEmptyField() {
+      const fields = getFocusableIssueFields();
+      if (!fields.length) return;
+
+      const active = document.activeElement;
+      let startIndex = active ? fields.indexOf(active) + 1 : 0;
+      if (startIndex < 0) startIndex = 0;
+
+      const nextField = fields[startIndex % fields.length];
+      const row = nextField.closest('tr');
+
+      document.querySelectorAll('#reviewTableBody tr').forEach((tr) => tr.classList.remove('issue-active'));
+      if (row) {
+        row.classList.add('issue-active');
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      nextField.focus();
+    }
+
+    if (focusEmptyBtn) focusEmptyBtn.addEventListener('click', focusNextEmptyField);
     if (jumpIssueBtn) jumpIssueBtn.addEventListener('click', jumpToNextIssue);
 
 
