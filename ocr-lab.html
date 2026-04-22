@@ -553,7 +553,7 @@
 
     <div class="card">
       <h2>Split Review Workspace</h2>
-      <div class="split-workspace workspace-expanded" style="margin-top:16px;">
+      <div class="split-workspace workspace-expanded" style="margin-top:0; height: calc(100vh - 120px);">
         <div class="split-panel">
           <div class="split-panel-header">Scan Preview</div>
           <div id="splitPreviewBody" class="split-panel-body">
@@ -566,7 +566,7 @@
         <div class="split-panel">
           <div class="split-panel-header">Draft extracted rows</div>
           <div class="split-panel-body">
-            <div class="draft-table-wrap">
+            <div class="draft-table-wrap" style="height:100%; overflow:auto;">
               <table>
                 <thead>
                   <tr>
