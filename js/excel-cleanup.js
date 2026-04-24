@@ -425,6 +425,25 @@ document.addEventListener('DOMContentLoaded', () => {
         tr.classList.add('row-duplicate')
       }
 
+
+      // ===== RISK FLAGS =====
+      const hasEmptyCell = headers.some(h => !row[h] || row[h].toString().trim() === '')
+      const shortId = (function () {
+        const idKey = headers.find(h => h.toLowerCase().includes('id'))
+        if (!idKey) return false
+        const val = (row[idKey] || '').toString().replace(/\D/g,'')
+        return val && val.length < 10
+      })()
+
+      if (hasEmptyCell) {
+        tr.classList.add('row-warning')
+      }
+
+      if (shortId) {
+        tr.classList.add('row-risk')
+      }
+
+
       tr.innerHTML = `
         <td class="index-col">${index + 1}</td>
         ${headers.map(h => `

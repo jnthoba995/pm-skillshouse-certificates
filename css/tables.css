@@ -138,3 +138,23 @@
   max-width: 260px;
   outline: none;
 }
+
+
+/* ===== RISK ROWS ===== */
+
+.data-table tbody tr.row-warning td {
+  background: #fff7ed;
+}
+
+.data-table tbody tr.row-risk td {
+  background: #fef2f2;
+}
+
+/* subtle left indicator */
+.data-table tbody tr.row-warning td:first-child {
+  border-left: 4px solid #f59e0b;
+}
+
+.data-table tbody tr.row-risk td:first-child {
+  border-left: 4px solid #dc2626;
+}
