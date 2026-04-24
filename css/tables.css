@@ -1,0 +1,140 @@
+.table-wrap {
+  overflow: auto;
+  max-height: 62vh;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.data-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: auto;
+}
+
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f8fafc;
+  color: var(--text);
+  text-align: left;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 14px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  line-height: 1.25;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  min-width: 180px;
+  max-width: 260px;
+}
+
+.data-table thead th:first-child {
+  min-width: 56px;
+  max-width: 56px;
+  width: 56px;
+}
+
+.data-table thead th.actions-col {
+  min-width: 170px;
+  max-width: 170px;
+  width: 170px;
+}
+
+.data-table thead th.status-col {
+  min-width: 120px;
+  max-width: 120px;
+  width: 120px;
+}
+
+.data-table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eef2f7;
+  vertical-align: top;
+  background: #fff;
+  line-height: 1.25;
+  min-width: 180px;
+  max-width: 260px;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.data-table tbody tr:hover td {
+  background: #fcfcfd;
+}
+
+.data-table tbody tr.row-duplicate td {
+  background: #fff7ed;
+}
+
+.data-table tbody tr.row-removed td {
+  background: #f9fafb;
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+
+.index-col {
+  width: 56px;
+  min-width: 56px !important;
+  max-width: 56px !important;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.data-table thead th:first-child,
+.data-table tbody td:first-child {
+  position: sticky;
+  left: 0;
+}
+
+.data-table thead th:first-child {
+  background: #f8fafc;
+  z-index: 2;
+}
+
+.data-table tbody td:first-child {
+  background: #fff;
+  z-index: 1;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-unique {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.status-duplicate {
+  background: #fff1f2;
+  color: #dc2626;
+}
+
+.status-kept {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.status-removed {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.editable-cell {
+  min-width: 180px;
+  max-width: 260px;
+  outline: none;
+}

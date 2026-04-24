@@ -1,0 +1,262 @@
+.cleanup-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+}
+
+.cleanup-toolbar-main {
+  align-items: center;
+}
+
+.cleanup-toolbar-meta {
+  align-items: center;
+  margin-top: 16px;
+}
+
+.cleanup-file-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 320px;
+  min-width: 280px;
+}
+
+.cleanup-file-name {
+  color: var(--muted);
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.cleanup-select-wrap {
+  flex: 1 1 240px;
+  min-width: 220px;
+}
+
+.cleanup-btn {
+  flex: 0 0 auto;
+  min-width: 190px;
+  min-height: 54px;
+}
+
+.primary-btn,
+.secondary-btn,
+.row-btn {
+  border: 0;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.primary-btn {
+  background: var(--primary);
+  box-shadow: 0 10px 24px rgba(242, 140, 24, 0.18);
+}
+
+.secondary-btn {
+  background: #111827;
+}
+
+.row-btn {
+  padding: 8px 10px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+.row-btn.keep {
+  background: #15803d;
+}
+
+.row-btn.remove {
+  background: #dc2626;
+}
+
+.sheet-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 100%;
+  height: 56px;
+  padding: 0 42px 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%),
+    #ffffff;
+  background-position:
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 12px) calc(50% - 3px),
+    0 0;
+  background-size: 6px 6px, 6px 6px, 100% 100%;
+  background-repeat: no-repeat;
+  color: var(--text);
+  font-weight: 600;
+  outline: none;
+}
+
+.sheet-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(242, 140, 24, 0.12);
+}
+
+.summary-text {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toggle-chip,
+.rule-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text);
+  font-weight: 600;
+  min-height: 48px;
+}
+
+.toggle-chip input {
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  .cleanup-select-wrap {
+    flex: 1 1 260px;
+  }
+
+  .cleanup-btn {
+    min-width: 170px;
+  }
+}
+
+@media (max-width: 900px) {
+  .cleanup-toolbar-main {
+    align-items: stretch;
+  }
+
+  .cleanup-file-wrap,
+  .cleanup-select-wrap,
+  .cleanup-btn {
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .primary-btn,
+  .secondary-btn,
+  .sheet-select {
+    width: 100%;
+  }
+
+  .cleanup-file-name {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .cleanup-toolbar,
+  .cleanup-toolbar-main,
+  .cleanup-toolbar-meta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .cleanup-file-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .cleanup-file-wrap input[type="file"] {
+    width: 100%;
+  }
+
+  .cleanup-file-name {
+    display: none;
+  }
+
+  .cleanup-select-wrap,
+  .cleanup-btn {
+    width: 100%;
+  }
+
+  .toggle-chip,
+  .rule-chip {
+    width: 100%;
+    justify-content: flex-start;
+    border-radius: 16px;
+  }
+
+  .section-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.cleanup-file-name {
+  display: none !important;
+}
+
+.cleanup-file-wrap {
+  flex: 0 1 280px !important;
+  min-width: 240px !important;
+}
+
+.cleanup-select-wrap {
+  flex: 0 1 230px !important;
+  min-width: 210px !important;
+}
+
+.cleanup-btn {
+  min-width: 170px !important;
+}
+
+@media (min-width: 901px) {
+  .cleanup-toolbar-main {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+  }
+
+  .cleanup-toolbar-main .secondary-btn {
+    min-width: 210px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .cleanup-file-wrap,
+  .cleanup-select-wrap,
+  .cleanup-btn {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+}

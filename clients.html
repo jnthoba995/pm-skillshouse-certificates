@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clients</title>
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/modules.css" />
+</head>
+<body>
+  <div id="appHeader"></div>
+
+  <div class="shell">
+    <div id="appSidebar"></div>
+
+    <main class="app-main">
+      <div class="page-title">Clients</div>
+
+      <div class="module-grid">
+        <section class="module-card">
+          <h3>Parallel Client Structure</h3>
+          <p>
+            This module will hold separate client records so operations, sessions,
+            reporting, and outputs can run in parallel without mixing data.
+          </p>
+        </section>
+
+        <section class="module-card">
+          <h3>Client-Level Controls</h3>
+          <ul class="module-list">
+            <li>Client profile and branding</li>
+            <li>Client session streams</li>
+            <li>Client reporting outputs</li>
+            <li>Client-specific operational tracking</li>
+          </ul>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/guard.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/clients.js"></script>
+</body>
+</html>
