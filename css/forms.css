@@ -396,3 +396,68 @@ body {
     min-width: 160px;
   }
 }
+
+
+/* ===== REVIEW OVERLAY ===== */
+
+.review-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.review-overlay-inner {
+  width: 95%;
+  max-width: 1400px;
+  height: 90%;
+  background: #fff;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.review-overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.review-overlay-body {
+  flex: 1;
+  padding: 16px;
+}
+
+.review-overlay-body .table-wrap {
+  height: 100%;
+}
+
+
+/* ===== AUTO FIX PANEL ===== */
+
+.auto-fix-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.auto-fix-item {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+
+.auto-fix-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 6px;
+}
