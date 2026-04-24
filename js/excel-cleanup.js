@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const fileNameText = document.getElementById('fileNameText')
   const processBtn = document.getElementById('processBtn')
   const exportBtn = document.getElementById('exportBtn')
+  const saveDraftBtn = document.getElementById('saveDraftBtn')
+  const restoreDraftBtn = document.getElementById('restoreDraftBtn')
   const sheetSelect = document.getElementById('sheetSelect')
   const ruleSelect = document.getElementById('ruleSelect')
   const ruleBadge = document.getElementById('ruleBadge')
@@ -68,6 +70,46 @@ document.addEventListener('DOMContentLoaded', () => {
   sheetSelect.addEventListener('change', () => {
     loadSheet(sheetSelect.value)
   })
+
+
+  saveDraftBtn.addEventListener('click', () => {
+    if (!workingRows.length) {
+      statusText.innerText = 'No cleanup session available to save yet.'
+      return
+    }
+
+    const payload = {
+      savedAt: new Date().toISOString(),
+      currentSheetName,
+      activeRule,
+      workingRows
+    }
+
+    localStorage.setItem('pm_cleanup_draft', JSON.stringify(payload))
+    statusText.innerText = `Draft saved at ${new Date(payload.savedAt).toLocaleString()}.`
+  })
+
+  restoreDraftBtn.addEventListener('click', () => {
+    const saved = localStorage.getItem('pm_cleanup_draft')
+
+    if (!saved) {
+      statusText.innerText = 'No saved cleanup draft found.'
+      return
+    }
+
+    const payload = JSON.parse(saved)
+
+    currentSheetName = payload.currentSheetName || ''
+    activeRule = payload.activeRule || 'generic'
+    workingRows = payload.workingRows || []
+
+    updateRuleBadge(activeRule)
+    renderTable()
+    updateSummary()
+
+    statusText.innerText = `Draft restored from ${new Date(payload.savedAt).toLocaleString()}.`
+  })
+
 
   ruleSelect.addEventListener('change', () => {
     if (currentSheetName) loadSheet(currentSheetName)
