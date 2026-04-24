@@ -670,3 +670,34 @@ function updateAutoFixSuggestions() {
 
   container.innerHTML = suggestions.map(s => `<div class="auto-fix-item">${s}</div>`).join('')
 }
+
+
+document.addEventListener('DOMContentLoaded', function () {
+  const btn = document.getElementById('autoCleanBtn')
+  if (!btn) return
+
+  btn.addEventListener('click', function () {
+    if (!workingRows || !workingRows.length) return
+
+    // trim values
+    workingRows.forEach(r => {
+      Object.keys(r).forEach(k => {
+        if (typeof r[k] === 'string') {
+          r[k] = r[k].trim()
+        }
+      })
+    })
+
+    // remove fully empty rows
+    workingRows = workingRows.filter(r => {
+      const values = Object.values(r)
+      return values.some(v => v && v.toString().trim() !== '')
+    })
+
+    renderTable()
+    updateSummary()
+    if (typeof updateAutoFixSuggestions === 'function') {
+      updateAutoFixSuggestions()
+    }
+  })
+})
