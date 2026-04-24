@@ -107,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateRuleBadge(activeRule)
     renderTable()
     updateSummary()
+    updateAutoFixSuggestions()
 
     statusText.innerText = `Draft restored from ${new Date(payload.savedAt).toLocaleString()}.`
   })
@@ -119,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
   duplicatesOnlyToggle.addEventListener('change', () => {
     renderTable()
     updateSummary()
+    updateAutoFixSuggestions()
   })
 
   hideRemovedToggle.addEventListener('change', () => {
@@ -135,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
   hideRemovedToggle.addEventListener('change', () => {
     renderTable()
     updateSummary()
+    updateAutoFixSuggestions()
   })
 
   exportBtn.addEventListener('click', () => {
@@ -255,6 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
     workingRows = applyDuplicateFlags(rows, headers, activeRule)
     renderTable()
     updateSummary()
+    updateAutoFixSuggestions()
     statusText.innerText = `Sheet loaded: ${sheetName}. Duplicate rows were auto-marked for removal.`
   }
 
@@ -619,3 +623,50 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/'/g, '&#39;')
   }
 })
+
+
+function updateAutoFixSuggestions() {
+  const container = document.getElementById('autoFixContent')
+  if (!container) return
+
+  if (!workingRows || !workingRows.length) {
+    container.innerHTML = 'No suggestions yet'
+    return
+  }
+
+  let missingCount = 0
+  let shortIdCount = 0
+
+  workingRows.forEach(r => {
+    const values = Object.values(r)
+
+    if (values.some(v => !v || v.toString().trim() === '')) {
+      missingCount++
+    }
+
+    const idField = Object.keys(r).find(k => k.toLowerCase().includes('id'))
+    if (idField) {
+      const val = (r[idField] || '').toString().replace(/\D/g,'')
+      if (val && val.length < 10) {
+        shortIdCount++
+      }
+    }
+  })
+
+  const suggestions = []
+
+  if (missingCount > 0) {
+    suggestions.push(`⚠️ ${missingCount} rows have missing fields`)
+  }
+
+  if (shortIdCount > 0) {
+    suggestions.push(`🪪 ${shortIdCount} rows may have invalid ID numbers`)
+  }
+
+  if (!suggestions.length) {
+    container.innerHTML = '✅ Data looks clean'
+    return
+  }
+
+  container.innerHTML = suggestions.map(s => `<div class="auto-fix-item">${s}</div>`).join('')
+}
