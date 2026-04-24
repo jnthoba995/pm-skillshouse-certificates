@@ -95,5 +95,29 @@
   <script src="js/guard.js"></script>
   <script src="js/layout.js"></script>
   <script src="js/excel-cleanup.js?v=9"></script>
+
+
+<!-- EXPAND REVIEW OVERLAY -->
+<div id="reviewOverlay" class="review-overlay" style="display:none;">
+  <div class="review-overlay-inner">
+
+    <div class="review-overlay-header">
+      <h3>Full Review</h3>
+      <button id="closeReviewBtn" class="secondary-btn">Close</button>
+    </div>
+
+    <div class="review-overlay-body">
+      <div class="table-wrap">
+        <table id="dataTableOverlay" class="data-table">
+          <thead></thead>
+          <tbody id="tableBodyOverlay"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+  <script src="js/review-overlay.js"></script>
 </body>
 </html>
