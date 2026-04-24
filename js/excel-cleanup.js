@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const ruleBadge = document.getElementById('ruleBadge')
   const duplicatesOnlyToggle = document.getElementById('duplicatesOnlyToggle')
   const hideRemovedToggle = document.getElementById('hideRemovedToggle')
+  const riskOnlyToggle = document.getElementById('riskOnlyToggle')
   const statusText = document.getElementById('statusText')
   const summaryText = document.getElementById('summaryText')
   const table = document.getElementById('dataTable')
@@ -120,6 +121,17 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSummary()
   })
 
+  hideRemovedToggle.addEventListener('change', () => {
+    renderTable()
+  })
+
+  if (riskOnlyToggle) {
+    riskOnlyToggle.addEventListener('change', () => {
+      renderTable()
+    })
+  }
+
+  // continue
   hideRemovedToggle.addEventListener('change', () => {
     renderTable()
     updateSummary()
@@ -388,7 +400,22 @@ document.addEventListener('DOMContentLoaded', () => {
       rows = rows.filter(r => r.isDuplicate)
     }
 
+
+    if (riskOnlyToggle && riskOnlyToggle.checked) {
+      rows = rows.filter(r => {
+        const hasEmpty = Object.values(r).some(v => !v || v.toString().trim() === '')
+        const idField = Object.keys(r).find(k => k.toLowerCase().includes('id'))
+        let shortId = false
+        if (idField) {
+          const val = (r[idField] || '').toString().replace(/\D/g,'')
+          shortId = val && val.length < 10
+        }
+        return hasEmpty || shortId
+      })
+    }
+
     if (hideRemovedToggle.checked) {
+
       rows = rows.filter(r => r.rowState !== 'removed')
     }
 
