@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/modules.css" />
+</head>
+<body>
+  <div id="appHeader"></div>
+
+  <div class="shell">
+    <div id="appSidebar"></div>
+
+    <main class="app-main">
+      <div class="page-title">Dashboard</div>
+
+      <div class="dashboard-grid">
+        <div class="card">
+          <div class="card-title">Sessions Completed</div>
+          <div class="card-value" id="sessionsCount">--</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">People Trained Today</div>
+          <div class="card-value" id="todayCount">--</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Pending Registers</div>
+          <div class="card-value" id="pendingRegisters">--</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Duplicate Files</div>
+          <div class="card-value" id="duplicateFiles">--</div>
+        </div>
+      </div>
+
+      <div class="module-grid" style="margin-top: 24px;">
+        <section class="module-card">
+          <h3>Parallel Client Readiness</h3>
+          <p>
+            The system is being structured so multiple clients can operate in parallel
+            with separate sessions, reporting, and workflow tracking.
+          </p>
+        </section>
+
+        <section class="module-card">
+          <h3>Next Build Focus</h3>
+          <ul class="module-list">
+            <li>Excel duplicate cleanup</li>
+            <li>Certificate workflow continuity</li>
+            <li>Register digitisation</li>
+            <li>Monthly sponsor reporting</li>
+          </ul>
+        </section>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="js/guard.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

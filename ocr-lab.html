@@ -490,6 +490,17 @@
 
 
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  window.__TESSERACT_OPTS__ = {
+    workerPath: "https://unpkg.com/tesseract.js@4.1.1/dist/worker.min.js",
+    corePath: "https://unpkg.com/tesseract.js-core@4.0.4/tesseract-core.wasm.js",
+    langPath: "https://tessdata.projectnaptha.com/4.0.0",
+    logger: function(m) { console.log("🔎 OCR", m); }
+  };
+</script>
 </head>
 <body>
   <div class="wrap">
@@ -690,7 +701,7 @@ function applyFieldLevelIssues() {
   });
 }
 function renderSimulatedRows(registerType) {
-      const rows = registerType === "sanlam"
+      let rows = registerType === "sanlam"
         ? [
             { row: "1", name: "Nomsa", surname: "Dlamini", idNumber: "9001010586088", contact: "0824567890", email: "nomsa@example.com", gender: "Female", employment: "Employed", creditReport: "Yes", financialAdvice: "Yes", confidence: "high", reviewStatus: "Draft" },
             { row: "2", name: "Thabo", surname: "Mokoena", idNumber: "8702125432081", contact: "0731234567", email: "", gender: "Male", employment: "Unemployed", creditReport: "", financialAdvice: "Yes", confidence: "medium", reviewStatus: "Needs review" },
@@ -741,7 +752,19 @@ setTimeout(() => {
 
       
 if (reviewTableBody) reviewTableBody.innerHTML = "";
-renderSimulatedRows(selectedType);
+if (window.__OCR_EXTRACTED_ROWS__ && window.__OCR_EXTRACTED_ROWS__.length > 0) {
+  reviewTableBody.innerHTML = window.__OCR_EXTRACTED_ROWS__
+    .map((row, index) => buildDraftRow(row, index))
+    .join("");
+
+  setTimeout(() => {
+    applyFieldLevelIssues();
+    bindAutoReview && bindAutoReview();
+  }, 50);
+
+} else {
+  renderSimulatedRows(selectedType);
+}
 
 setTimeout(() => {
   const table = document.getElementById("reviewTable");
@@ -758,6 +781,14 @@ setTimeout(() => {
     if (exportDraftBtn) exportDraftBtn.addEventListener("click", downloadSheetExcel);
 
     if (previewScanBtn) previewScanBtn.addEventListener("click", function () {
+
+      // 🔥 FORCE OCR AFTER PREVIEW LOAD
+      setTimeout(() => {
+        if (ocrFile && ocrFile.files && ocrFile.files[0]) {
+          console.log("🚀 Triggering OCR after preview");
+          runOCRSafe(ocrFile.files[0]);
+        }
+      }, 800);
       const file = ocrFile.files && ocrFile.files[0];
       if (!file) {
         ocrStatus.textContent = "Please choose a PDF or image first.";
@@ -771,6 +802,429 @@ setTimeout(() => {
       }
       ocrStatus.textContent = "Preview loaded.";
     });
+
+    async function runOCRSafe(file) {
+      try {
+        console.log("🔄 Running REAL OCR safely...");
+
+        if (!file) {
+          console.warn("No file passed to OCR");
+          return;
+        }
+
+        let imageDataUrl = "";
+        let sourceCanvas = null;
+
+        if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          const page = await pdf.getPage(1);
+          const viewport = page.getViewport({ scale: 5.5 });
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d");
+
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+
+          await page.render({
+            canvasContext: context,
+            viewport: viewport
+          }).promise;
+
+          const cropX = Math.floor(canvas.width * 0.01);
+          const cropY = Math.floor(canvas.height * 0.69);
+          const cropW = Math.floor(canvas.width * 0.57);
+          const cropH = Math.floor(canvas.height * 0.19);
+
+          const cropCanvas = document.createElement("canvas");
+          const cropCtx = cropCanvas.getContext("2d");
+          cropCanvas.width = cropW;
+          cropCanvas.height = cropH;
+
+          cropCtx.drawImage(
+            canvas,
+            cropX, cropY, cropW, cropH,
+            0, 0, cropW, cropH
+          );
+
+          const imgData = cropCtx.getImageData(0, 0, cropW, cropH);
+          const data = imgData.data;
+          for (let i = 0; i < data.length; i += 4) {
+            const gray = Math.round((data[i] + data[i + 1] + data[i + 2]) / 3);
+            data[i] = gray;
+            data[i + 1] = gray;
+            data[i + 2] = gray;
+          }
+          cropCtx.putImageData(imgData, 0, 0);
+          sourceCanvas = cropCanvas;
+
+          imageDataUrl = cropCanvas.toDataURL("image/png");
+
+          var debugBox = document.getElementById("ocrDebugCrop");
+          if (!debugBox) {
+            debugBox = document.createElement("div");
+            debugBox.id = "ocrDebugCrop";
+            debugBox.style.margin = "16px 0";
+            debugBox.innerHTML = '<div style="font-weight:700; margin-bottom:8px;">OCR Crop Debug</div><img id="ocrDebugCropImg" style="max-width:100%; width:100%; border:1px solid #d1d5db; border-radius:12px; background:#fff;" />';
+            inlinePreview.parentNode.insertBefore(debugBox, inlinePreview.nextSibling);
+          }
+          var debugImg = document.getElementById("ocrDebugCropImg");
+          if (debugImg) debugImg.src = imageDataUrl;
+
+          var debugColumnsBox = document.getElementById("ocrDebugColumns");
+          if (!debugColumnsBox) {
+            debugColumnsBox = document.createElement("div");
+            debugColumnsBox.id = "ocrDebugColumns";
+            debugColumnsBox.style.margin = "16px 0";
+            debugColumnsBox.innerHTML = '<div style="font-weight:700; margin-bottom:8px;">OCR Column Debug</div><div id="ocrDebugColumnsGrid" style="display:grid; grid-template-columns:repeat(3, minmax(180px, 1fr)); gap:12px;"></div>';
+            debugBox.parentNode.insertBefore(debugColumnsBox, debugBox.nextSibling);
+          }
+          var debugColumnsGrid = document.getElementById("ocrDebugColumnsGrid");
+          if (debugColumnsGrid) debugColumnsGrid.innerHTML = "";
+
+
+          
+
+
+          
+
+        } else {
+          imageDataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+        }
+
+        const worker = await Tesseract.createWorker(window.__TESSERACT_OPTS__);
+        await worker.loadLanguage("eng");
+        await worker.initialize("eng");
+        await worker.setParameters({
+          tessedit_pageseg_mode: "4",
+          preserve_interword_spaces: "1"
+        });
+        let rowTexts = [];
+
+        if (sourceCanvas) {
+          const rowCount = 8;
+          const topTrim = Math.floor(sourceCanvas.height * 0.01);
+          const usableHeight = Math.floor(sourceCanvas.height * 0.97);
+          const rowHeight = Math.floor(usableHeight / rowCount);
+
+          for (let i = 0; i < rowCount; i++) {
+            const sy = topTrim + (i * rowHeight);
+            const sh = i === rowCount - 1 ? (sourceCanvas.height - sy) : rowHeight;
+
+            const rowCanvas = document.createElement("canvas");
+            const rowCtx = rowCanvas.getContext("2d");
+            rowCanvas.width = sourceCanvas.width;
+            rowCanvas.height = sh;
+
+            // vertical trim to remove grid lines
+const vPad = Math.floor(sh * 0.08);
+
+rowCtx.drawImage(
+              sourceCanvas,
+              0, sy + vPad, sourceCanvas.width, sh - (vPad * 2),
+              0, 0, sourceCanvas.width, sh
+            );
+
+            const imgData = rowCtx.getImageData(0, 0, rowCanvas.width, rowCanvas.height);
+            const data = imgData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+              const avg = (data[i] + data[i+1] + data[i+2]) / 3;
+
+              // threshold — remove grey + lines
+              // improved threshold (preserve ink, remove grid)
+const val = avg > 200 ? 255 : (avg < 120 ? 0 : avg);
+
+              data[i] = val;
+              data[i+1] = val;
+              data[i+2] = val;
+            }
+
+            rowCtx.putImageData(imgData, 0, 0);
+
+            const sliceText = async (sxRatio, swRatio, mode) => {
+              const sx = Math.floor(rowCanvas.width * sxRatio);
+              const sw = Math.floor(rowCanvas.width * swRatio);
+
+              const sliceCanvas = document.createElement("canvas");
+              const sliceCtx = sliceCanvas.getContext("2d");
+              sliceCanvas.width = sw;
+              sliceCanvas.height = rowCanvas.height;
+
+              sliceCtx.drawImage(
+                rowCanvas,
+                sx, 0, sw, rowCanvas.height,
+                0, 0, sw, rowCanvas.height
+              );
+
+              const sliceDataUrl = sliceCanvas.toDataURL("image/png");
+              await worker.setParameters({
+  tessedit_pageseg_mode: mode,
+  preserve_interword_spaces: "1",
+  tessedit_char_whitelist:
+    sxRatio < 0.7
+      ? "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz "
+      : "0123456789"
+});
+
+              const sliceResult = await worker.recognize(sliceDataUrl);
+              return ((((sliceResult || {}).data) || {}).text || "")
+                .replace(/\s+/g, " ")
+                .trim();
+            };
+
+            const prepareSliceCanvas = (sxRatio, swRatio, kind) => {
+              const baseSx = Math.floor(rowCanvas.width * sxRatio);
+              const baseSw = Math.floor(rowCanvas.width * swRatio);
+
+              const leftTrim = Math.floor(baseSw * 0.015);
+              const rightTrim = Math.floor(baseSw * 0.015);
+              const topTrim = Math.floor(rowCanvas.height * 0.02);
+              const bottomTrim = Math.floor(rowCanvas.height * 0.08);
+
+              const sx = Math.max(0, baseSx + leftTrim);
+              const sw = Math.max(10, baseSw - leftTrim - rightTrim);
+              const sy = Math.max(0, topTrim);
+              const sh = Math.max(10, rowCanvas.height - topTrim - bottomTrim);
+
+              const rawCanvas = document.createElement("canvas");
+              const rawCtx = rawCanvas.getContext("2d");
+              rawCanvas.width = sw;
+              rawCanvas.height = sh;
+
+              rawCtx.drawImage(
+                rowCanvas,
+                sx, sy, sw, sh,
+                0, 0, sw, sh
+              );
+
+              const zoom = 3;
+              const workCanvas = document.createElement("canvas");
+              const workCtx = workCanvas.getContext("2d");
+              workCanvas.width = rawCanvas.width * zoom;
+              workCanvas.height = rawCanvas.height * zoom;
+              workCtx.imageSmoothingEnabled = false;
+              workCtx.drawImage(rawCanvas, 0, 0, workCanvas.width, workCanvas.height);
+
+              const imgData = workCtx.getImageData(0, 0, workCanvas.width, workCanvas.height);
+              const data = imgData.data;
+
+              // threshold first
+              for (let p = 0; p < data.length; p += 4) {
+                const avg = (data[p] + data[p+1] + data[p+2]) / 3;
+                const val = kind === "id"
+                  ? (avg > 225 ? 255 : (avg < 150 ? 0 : 255))
+                  : (avg > 235 ? 255 : (avg < 160 ? 0 : 255));
+                data[p] = val;
+                data[p+1] = val;
+                data[p+2] = val;
+              }
+
+              // remove vertical grid lines (critical for ID)
+              if (kind === "id") {
+                const w = workCanvas.width;
+                const h = workCanvas.height;
+
+                for (let x = 0; x < w; x++) {
+                  let darkCount = 0;
+
+                  for (let y = 0; y < h; y++) {
+                    const idx = (y * w + x) * 4;
+                    if (data[idx] === 0) darkCount++;
+                  }
+
+                  // if column is mostly vertical line → erase it
+                  if (darkCount > h * 0.6) {
+                    for (let y = 0; y < h; y++) {
+                      const idx = (y * w + x) * 4;
+                      data[idx] = 255;
+                      data[idx+1] = 255;
+                      data[idx+2] = 255;
+                    }
+                  }
+                }
+              }
+
+              workCtx.putImageData(imgData, 0, 0);
+              return workCanvas;
+            };
+
+            const addSliceDebugCard = (label, rowNumber, sliceCanvas) => {
+              const debugGrid = document.getElementById("ocrDebugColumnsGrid");
+              if (!debugGrid || rowNumber > 3) return;
+
+              const card = document.createElement("div");
+              card.style.border = "1px solid #d1d5db";
+              card.style.borderRadius = "12px";
+              card.style.background = "#fff";
+              card.style.padding = "10px";
+              card.innerHTML =
+                '<div style="font-size:12px; font-weight:700; color:#374151; margin-bottom:8px;">Row ' + rowNumber + ' · ' + label + '</div>' +
+                '<img src="' + sliceCanvas.toDataURL("image/png") + '" style="width:100%; border:1px solid #e5e7eb; border-radius:8px; background:#fff;" />';
+              debugGrid.appendChild(card);
+            };
+
+            const readSlice = async (sxRatio, swRatio, mode, whitelist, label, rowNumber, kind) => {
+              const sliceCanvas = prepareSliceCanvas(sxRatio, swRatio, kind);
+              addSliceDebugCard(label, rowNumber, sliceCanvas);
+              const sliceDataUrl = sliceCanvas.toDataURL("image/png");
+
+              await worker.setParameters({
+                tessedit_pageseg_mode: mode,
+                preserve_interword_spaces: "1",
+                tessedit_char_whitelist: whitelist
+              });
+
+              const sliceResult = await worker.recognize(sliceDataUrl);
+              return ((((sliceResult || {}).data) || {}).text || "")
+                .replace(/\s+/g, " ")
+                .trim();
+            };
+
+            const debugRowNumber = i + 1;
+            const nameText = await readSlice(0.01, 0.41, "7", "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", "Name", debugRowNumber, "text");
+            const surnameText = await readSlice(0.43, 0.30, "7", "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", "Surname", debugRowNumber, "text");
+            const idText = await readSlice(0.73, 0.25, "7", "0123456789", "ID", debugRowNumber, "id");
+
+            const rowText = [nameText, surnameText, idText].join(" | ").trim();
+
+            if (rowText.replace(/[|\s]/g, "")) rowTexts.push(rowText);
+          }
+        } else {
+          const result = await worker.recognize(imageDataUrl);
+          const text = (((result || {}).data) || {}).text || "";
+          rowTexts = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+        }
+
+        const text = rowTexts.join("\n");
+        console.log("🧠 OCR TEXT:", text);
+        await worker.terminate();
+
+        const titleCase = (value) => value
+          .toLowerCase()
+          .replace(/\b[a-z]/g, (m) => m.toUpperCase());
+
+        const cleanLetters = (value) => (value || "")
+          .replace(/[^A-Za-z\s]/g, " ")
+          .replace(/\b[A-Z]\b/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+
+        const smartName = (value) => {
+          const cleaned = cleanLetters(value);
+          if (!cleaned) return "";
+          const parts = cleaned.split(" ").filter(Boolean);
+          const filtered = parts.filter((part) => part.length >= 2);
+          return titleCase(filtered.join(" ").trim());
+        };
+
+        const smartId = (value) => {
+          const digits = String(value || "").replace(/\D/g, "");
+          if (digits.length >= 13) return digits.slice(0, 13);
+          if (digits.length >= 10) return digits;
+          return "";
+        };
+
+        const smartPhone = (value) => {
+          const digits = String(value || "").replace(/\D/g, "");
+          if (digits.length >= 10) return digits.slice(0, 10);
+          return "";
+        };
+
+        const inferConfidence = (row) => {
+          let score = 0;
+          if (row.name && row.name.length >= 3) score += 1;
+          if (row.surname && row.surname.length >= 3) score += 1;
+          if (row.idNumber && row.idNumber.length >= 10) score += 1;
+          if (row.contact && row.contact.length == 10) score += 1;
+          if (score >= 3) return "high";
+          if (score >= 2) return "medium";
+          return "low";
+        };
+
+        const rows = [];
+
+        for (let i = 0; i < rowTexts.length; i++) {
+          const line = rowTexts[i];
+          const bits = line.split("|").map((s) => s.trim());
+
+          const rawName = bits[0] || "";
+          const rawSurname = bits[1] || "";
+          const rawId = bits[2] || "";
+          const rawContact = bits[3] || "";
+
+          let cleanName = smartName(rawName);
+          let cleanSurname = smartName(rawSurname);
+          let idNumber = smartId(rawId);
+          let contact = smartPhone(rawContact);
+
+          if (!cleanName && cleanSurname) {
+            cleanName = cleanSurname;
+            cleanSurname = "";
+          }
+
+          if (cleanName && cleanSurname && cleanName.toLowerCase() === cleanSurname.toLowerCase()) {
+            cleanSurname = "";
+          }
+
+          if (idNumber && contact && idNumber === contact) {
+            contact = "";
+          }
+
+          if (!cleanName && !cleanSurname && !idNumber && !contact) continue;
+
+          const row = {
+            row: String(rows.length + 1),
+            name: cleanName,
+            surname: cleanSurname,
+            idNumber: idNumber,
+            contact: contact,
+            email: "",
+            gender: "",
+            employment: "",
+            creditReport: "",
+            financialAdvice: "",
+            confidence: "low",
+            reviewStatus: "Needs review"
+          };
+
+          row.confidence = inferConfidence(row);
+          rows.push(row);
+        }
+
+        if (!rows.length) {
+          rows.push({
+            row: "1",
+            name: "",
+            surname: "",
+            idNumber: "",
+            contact: "",
+            email: "",
+            gender: "",
+            employment: "",
+            creditReport: "",
+            financialAdvice: "",
+            confidence: "low",
+            reviewStatus: "Needs review"
+          });
+        }
+
+        window.__OCR_EXTRACTED_ROWS__ = rows;
+
+        if (reviewTableBody) {
+          reviewTableBody.innerHTML = rows.map((row, index) => buildDraftRow(row, index)).join("");
+        }
+
+        console.log("✅ OCR safe injection complete", rows);
+      } catch (e) {
+        console.error("❌ OCR failed", e);
+      }
+    }
 
     function collectSheetRows() {
       const rows = Array.from(document.querySelectorAll("#reviewTableBody tr"));
@@ -1048,6 +1502,19 @@ function toggleLabInfo() {
   });
 }
 
+
+// 🔥 SAFE OVERRIDE (no breaking)
+(function(){
+  const original = window.renderSimulatedRows;
+
+  window.renderSimulatedRows = function(type){
+    if (window.__OCR_EXTRACTED_ROWS__ && window.__OCR_EXTRACTED_ROWS__.length > 0){
+      console.log("⛔ Blocking simulated rows — OCR active");
+      return;
+    }
+    return original ? original(type) : null;
+  };
+})();
 </script>
 </body>
 </html>

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PM Skillshouse Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 24px;
+      color: #1f2937;
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+    h1, h2, h3, p {
+      margin-top: 0;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px 14px;
+      margin-top: 10px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      font-size: 15px;
+    }
+    button {
+      background: #f97316;
+      color: white;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #ea580c;
+    }
+    .hidden {
+      display: none;
+    }
+    .muted {
+      color: #6b7280;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .stat {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: #9a3412;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #111827;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 14px;
+      vertical-align: top;
+    }
+    th {
+      color: #374151;
+      font-size: 13px;
+    }
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #fff7ed;
+      color: #9a3412;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #fed7aa;
+    }
+    #loginMsg, #dashMsg {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #b91c1c;
+      white-space: pre-line;
+    }
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" id="loginBox">
+      <h1>PM Skillshouse Admin</h1>
+      <p class="muted">Closed admin access only. Sign in with your approved email and password.</p>
+      <input id="email" type="email" placeholder="Email" />
+      <input id="password" type="password" placeholder="Password" />
+      <button id="loginBtn">Login</button>
+      <p id="loginMsg"></p>
+    </div>
+
+    <div class="hidden" id="dashboard">
+      <div class="card">
+        <div class="top-row">
+          <div>
+            <h1 style="margin-bottom:8px;">Admin Dashboard</h1>
+            <p id="userInfo" class="muted" style="margin-bottom:0;"></p>
+          </div>
+          <div style="min-width: 160px;">
+            <button id="logoutBtn">Logout</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="stat">
+          <div class="stat-label">Total runs in view</div>
+          <div class="stat-value" id="totalRuns">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Total certificates in view</div>
+          <div class="stat-value" id="totalCertificates">0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-bottom:8px;">Recent activity</h2>
+        <p class="muted">Latest metadata-only certificate runs. No participant names, IDs, emails, or PDFs are shown here.</p>
+        <div id="recentRunsWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Client</th>
+                <th>Certificates</th>
+                <th>Delivery</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody id="runsTableBody"></tbody>
+          </table>
+        </div>
+        <p id="dashMsg"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    if (!window._supabaseClient) {
+      window._supabaseClient = window.supabase.createClient(
+        "https://xwgdiyiwoaqkwljqfaiy.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3Z2RpeWl3b2Fxa3dsanFmYWl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MDI2MDAsImV4cCI6MjA5MjI3ODYwMH0.w4mH_0Jpu9p_ciDIthYMexC5-nlsw5B1SdYOqOu5vD0"
+      );
+    }
+
+    var supabase = window._supabaseClient;
+
+    const loginBox = document.getElementById("loginBox");
+    const dashboard = document.getElementById("dashboard");
+    const loginMsg = document.getElementById("loginMsg");
+    const dashMsg = document.getElementById("dashMsg");
+    const userInfo = document.getElementById("userInfo");
+    const totalRuns = document.getElementById("totalRuns");
+    const totalCertificates = document.getElementById("totalCertificates");
+    const runsTableBody = document.getElementById("runsTableBody");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    function formatDate(value) {
+      if (!value) return "";
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return value;
+      return d.toLocaleString();
+    }
+
+    function renderRuns(rows) {
+      runsTableBody.innerHTML = "";
+
+      if (!rows || !rows.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = '<td colspan="5" class="muted">No runs found yet.</td>';
+        runsTableBody.appendChild(tr);
+        return;
+      }
+
+      rows.forEach(function(row) {
+        const tr = document.createElement("tr");
+
+        const delivery = Array.isArray(row.delivery_types) && row.delivery_types.length
+          ? row.delivery_types.join(", ")
+          : "—";
+
+        tr.innerHTML =
+          "<td>" + formatDate(row.created_at) + "</td>" +
+          "<td><span class=\"pill\">" + String(row.client || "—") + "</span></td>" +
+          "<td>" + String(row.certificate_count || 0) + "</td>" +
+          "<td>" + delivery + "</td>" +
+          "<td>" + String(row.source || "—") + "</td>";
+
+        runsTableBody.appendChild(tr);
+      });
+    }
+
+    async function getAccessToken() {
+      const sessionResult = await supabase.auth.getSession();
+      const session = sessionResult && sessionResult.data ? sessionResult.data.session : null;
+      return session && session.access_token ? session.access_token : null;
+    }
+
+    async function login() {
+      loginMsg.textContent = "";
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      const result = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (result.error) {
+        loginMsg.textContent = result.error.message;
+        return;
+      }
+
+      await checkUserAndLoad();
+    }
+
+    async function logout() {
+      await supabase.auth.signOut();
+      location.reload();
+    }
+
+    async function fetchAdminMe() {
+      const token = await getAccessToken();
+
+      if (!token) {
+        return { error: "No active session" };
+      }
+
+      const response = await fetch("/api/admin-me", {
+        method: "GET",
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      });
+
+      const data = await response.json().catch(function() {
+        return {};
+      });
+
+      if (!response.ok) {
+        return { error: data.error || "Failed to load admin profile", details: data.details || "" };
+      }
+
+      return { data: data };
+    }
+
+    async function fetchAdminStats() {
+      const token = await getAccessToken();
+
+      if (!token) {
+        return { error: "No active session" };
+      }
+
+      const response = await fetch("/api/admin-stats", {
+        method: "GET",
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      });
+
+      const data = await response.json().catch(function() {
+        return {};
+      });
+
+      if (!response.ok) {
+        return { error: data.error || "Failed to load admin stats", details: data.details || "" };
+      }
+
+      return { data: data };
+    }
+
+    async function checkUserAndLoad() {
+      loginMsg.textContent = "";
+      dashMsg.textContent = "";
+
+      const meResult = await fetchAdminMe();
+
+      if (meResult.error) {
+        await supabase.auth.signOut();
+        loginBox.classList.remove("hidden");
+        dashboard.classList.add("hidden");
+        loginMsg.textContent = meResult.error;
+        return;
+      }
+
+      const me = meResult.data;
+      loginBox.classList.add("hidden");
+      dashboard.classList.remove("hidden");
+
+      userInfo.textContent =
+        "Logged in as: " + me.user.email + " (" + me.admin.role + ")";
+
+      const statsResult = await fetchAdminStats();
+
+      if (statsResult.error) {
+        dashMsg.textContent = statsResult.error;
+        totalRuns.textContent = "0";
+        totalCertificates.textContent = "0";
+        renderRuns([]);
+        return;
+      }
+
+      const stats = statsResult.data;
+      totalRuns.textContent = String(stats.summary.total_runs_in_view || 0);
+      totalCertificates.textContent = String(stats.summary.total_certificates_in_view || 0);
+      renderRuns(stats.recent_runs || []);
+    }
+
+    loginBtn.addEventListener("click", login);
+    logoutBtn.addEventListener("click", logout);
+
+    checkUserAndLoad();
+  </script>
+</body>
+</html>

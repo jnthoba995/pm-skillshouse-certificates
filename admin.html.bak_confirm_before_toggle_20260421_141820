@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PM Skillshouse Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 24px;
+      color: #1f2937;
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+    h1, h2, h3, p {
+      margin-top: 0;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px 14px;
+      margin-top: 10px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      font-size: 15px;
+    }
+    button {
+      background: #f97316;
+      color: white;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #ea580c;
+    }
+    .hidden {
+      display: none;
+    }
+    .muted {
+      color: #6b7280;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .stat {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+    }
+    .stat-label {
+      font-size: 13px;
+      color: #9a3412;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #111827;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 14px;
+      vertical-align: top;
+    }
+    th {
+      color: #374151;
+      font-size: 13px;
+    }
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #fff7ed;
+      color: #9a3412;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #fed7aa;
+    }
+
+    .role-home-card {
+      margin-top: 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .role-home-title {
+      margin: 0 0 6px;
+      font-size: 24px;
+      color: #111827;
+    }
+
+    .role-home-sub {
+      margin: 0;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .role-focus-box {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+    }
+
+    .role-focus-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #9a3412;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+
+    .role-focus-text {
+      font-size: 14px;
+      color: #374151;
+      line-height: 1.6;
+    }
+    #loginMsg, #dashMsg {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #b91c1c;
+      white-space: pre-line;
+    }
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" id="loginBox">
+      <h1>PM Skillshouse Admin</h1>
+      <p class="muted">Closed admin access only. Sign in with your approved email and password.</p>
+      <input id="email" type="email" placeholder="Email" />
+      <input id="password" type="password" placeholder="Password" />
+      <button id="loginBtn">Login</button>
+      <p id="loginMsg"></p>
+    </div>
+
+    <div class="hidden" id="dashboard">
+      <div class="card">
+        <div class="top-row">
+          <div>
+            <h1 style="margin-bottom:8px;">Admin Dashboard</h1>
+            <p id="userInfo" class="muted" style="margin-bottom:0;"></p>
+          </div>
+          <div style="min-width: 160px;">
+            <button id="logoutBtn">Logout</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card hidden role-home-card" id="superAdminSection">
+        <h2 class="role-home-title">Super Admin Home</h2>
+        <p class="role-home-sub">Manage access, monitor system activity, and oversee the full certificate operation from one place.</p>
+        <div class="role-focus-box">
+          <div class="role-focus-label">Focus Area</div>
+          <div class="role-focus-text">Control user access, review activity trends, and keep the full certificate system running smoothly.</div>
+        </div>
+      </div>
+
+      <div class="card hidden role-home-card" id="adminSection">
+        <h2 class="role-home-title">Admin Home</h2>
+        <p class="role-home-sub">Review activity, support delivery work, and keep daily certificate operations running smoothly.</p>
+        <div class="role-focus-box">
+          <div class="role-focus-label">Focus Area</div>
+          <div class="role-focus-text">Track processing activity, support the operators, and maintain delivery quality across active certificate batches.</div>
+        </div>
+      </div>
+
+      <div class="card hidden role-home-card" id="operatorSection">
+        <h2 class="role-home-title">Operator Workspace</h2>
+        <p class="role-home-sub">Use this workspace to handle certificate preparation, downloads, and email-related tasks.</p>
+        <div class="role-focus-box">
+          <div class="role-focus-label">Focus Area</div>
+          <div class="role-focus-text">Prepare certificate batches accurately, complete delivery steps efficiently, and keep day-to-day processing moving.</div>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-bottom: 12px;">
+        <div class="stat">
+          <div class="stat-label">Total runs in view</div>
+          <div class="stat-value" id="totalRuns">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Total certificates in view</div>
+          <div class="stat-value" id="totalCertificates">0</div>
+        </div>
+      </div>
+
+      <div class="card hidden" id="createUserCard" style="margin-top: 8px;">
+        <h2 style="margin-bottom:6px;">Create admin login</h2>
+        <p class="muted">Create login access for printing, email sending, or other approved admin tasks.</p>
+        <div class="grid">
+          <div>
+            <input id="newAdminEmail" type="email" placeholder="New admin email" />
+          </div>
+          <div>
+            <input id="newAdminName" type="text" placeholder="Full name (optional)" />
+          </div>
+          <div>
+            <input id="newAdminPassword" type="password" placeholder="Temporary password" />
+          </div>
+          <div>
+            <select id="newAdminRole" style="width:100%;padding:12px 14px;margin-top:10px;border-radius:10px;border:1px solid #d1d5db;font-size:15px;background:#fff;">
+              <option value="admin">admin</option>
+              <option value="operator">operator</option>
+            </select>
+          </div>
+        </div>
+        <button id="createUserBtn">Create login</button>
+        <p id="createUserMsg"></p>
+      </div>
+
+      <div class="card hidden" id="manageUsersCard" style="margin-top: 8px;">
+        <h2 style="margin-bottom:6px;">Manage Users</h2>
+        <p class="muted">View the current admin and operator accounts in the system.</p>
+        <div id="manageUsersWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+        <p id="usersMsg"></p>
+      </div>
+
+      <div class="card" style="margin-top: 8px;">
+        <h2 style="margin-bottom:6px;">Recent activity</h2>
+        <p class="muted">Latest metadata-only certificate runs. No participant names, IDs, emails, or PDFs are shown here.</p>
+        <div id="recentRunsWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Client</th>
+                <th>Certificates</th>
+                <th>Delivery</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody id="runsTableBody"></tbody>
+          </table>
+        </div>
+        <p id="dashMsg"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    if (!window._supabaseClient) {
+      window._supabaseClient = window.supabase.createClient(
+        "https://xwgdiyiwoaqkwljqfaiy.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3Z2RpeWl3b2Fxa3dsanFmYWl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MDI2MDAsImV4cCI6MjA5MjI3ODYwMH0.w4mH_0Jpu9p_ciDIthYMexC5-nlsw5B1SdYOqOu5vD0"
+      );
+    }
+
+    var supabase = window._supabaseClient;
+
+    const loginBox = document.getElementById("loginBox");
+    const dashboard = document.getElementById("dashboard");
+    const loginMsg = document.getElementById("loginMsg");
+    const dashMsg = document.getElementById("dashMsg");
+    const userInfo = document.getElementById("userInfo");
+    const totalRuns = document.getElementById("totalRuns");
+    const totalCertificates = document.getElementById("totalCertificates");
+    const runsTableBody = document.getElementById("runsTableBody");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const createUserCard = document.getElementById("createUserCard");
+    const createUserBtn = document.getElementById("createUserBtn");
+    const createUserMsg = document.getElementById("createUserMsg");
+    const manageUsersCard = document.getElementById("manageUsersCard");
+    const usersTableBody = document.getElementById("usersTableBody");
+    const usersMsg = document.getElementById("usersMsg");
+    const superAdminSection = document.getElementById("superAdminSection");
+
+    let currentAdminRole = "";
+    let currentAdminId = "";
+    const adminSection = document.getElementById("adminSection");
+    const operatorSection = document.getElementById("operatorSection");
+
+    function formatDate(value) {
+      if (!value) return "";
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return value;
+      return d.toLocaleString();
+    }
+
+    function renderRuns(rows) {
+      runsTableBody.innerHTML = "";
+
+      if (!rows || !rows.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = '<td colspan="5" class="muted">No runs found yet.</td>';
+        runsTableBody.appendChild(tr);
+        return;
+      }
+
+      rows.forEach(function(row) {
+        const tr = document.createElement("tr");
+
+        const delivery = Array.isArray(row.delivery_types) && row.delivery_types.length
+          ? row.delivery_types.join(", ")
+          : "—";
+
+        tr.innerHTML =
+          "<td>" + formatDate(row.created_at) + "</td>" +
+          "<td><span class=\"pill\">" + String(row.client || "—") + "</span></td>" +
+          "<td>" + String(row.certificate_count || 0) + "</td>" +
+          "<td>" + delivery + "</td>" +
+          "<td>" + String(row.source || "—") + "</td>";
+
+        runsTableBody.appendChild(tr);
+      });
+    }
+
+    async function getAccessToken() {
+      const sessionResult = await supabase.auth.getSession();
+      const session = sessionResult && sessionResult.data ? sessionResult.data.session : null;
+      return session && session.access_token ? session.access_token : null;
+    }
+
+    async function login() {
+      loginMsg.textContent = "";
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      const result = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (result.error) {
+        loginMsg.textContent = result.error.message;
+        return;
+      }
+
+      await checkUserAndLoad();
+    }
+
+    async function logout() {
+      await supabase.auth.signOut();
+      location.reload();
+    }
+
+    async function fetchAdminMe() {
+      const token = await getAccessToken();
+
+      if (!token) {
+        return { error: "No active session" };
+      }
+
+      const response = await fetch("/api/admin-me", {
+        method: "GET",
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      });
+
+      const data = await response.json().catch(function() {
+        return {};
+      });
+
+      if (!response.ok) {
+        return { error: data.error || "Failed to load admin profile", details: data.details || "" };
+      }
+
+      return { data: data };
+    }
+
+    async function fetchAdminStats() {
+      const token = await getAccessToken();
+
+      if (!token) {
+        return { error: "No active session" };
+      }
+
+      const response = await fetch("/api/admin-stats", {
+        method: "GET",
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      });
+
+      const data = await response.json().catch(function() {
+        return {};
+      });
+
+      if (!response.ok) {
+        return { error: data.error || "Failed to load admin stats", details: data.details || "" };
+      }
+
+      return { data: data };
+    }
+
+    function renderUsers(rows) {
+      usersTableBody.innerHTML = "";
+
+      if (!rows || !rows.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = '<td colspan="6" class="muted">No users found yet.</td>';
+        usersTableBody.appendChild(tr);
+        return;
+      }
+
+      rows.forEach(function(row) {
+        const tr = document.createElement("tr");
+        const displayName = row && row.full_name ? String(row.full_name) : "—";
+        const email = row && row.email ? String(row.email) : "—";
+        const role = row && row.role ? String(row.role) : "—";
+        const status = row && row.is_active ? "Active" : "Inactive";
+        const created = formatDate(row && row.created_at ? row.created_at : "");
+        const rowId = row && row.id ? String(row.id) : "";
+        const isActive = !!(row && row.is_active);
+        const isSelf = currentAdminId && rowId === currentAdminId;
+        const canToggle = currentAdminRole === "super_admin" && rowId && !isSelf;
+        const actionHtml = canToggle
+          ? '<button class="userToggleBtn" data-id="' + rowId + '" data-next-active="' + (!isActive) + '">' + (isActive ? "Deactivate" : "Activate") + '</button>'
+          : "—";
+
+        tr.innerHTML =
+          "<td>" + displayName + "</td>" +
+          "<td>" + email + "</td>" +
+          "<td><span class=\"pill\">" + role + "</span></td>" +
+          "<td>" + status + "</td>" +
+          "<td>" + created + "</td>" +
+          "<td>" + actionHtml + "</td>";
+
+        usersTableBody.appendChild(tr);
+      });
+
+      const toggleButtons = document.querySelectorAll(".userToggleBtn");
+      toggleButtons.forEach(function(btn) {
+        btn.addEventListener("click", async function() {
+          const targetId = btn.getAttribute("data-id");
+          const nextActive = btn.getAttribute("data-next-active") === "true";
+          await toggleAdminUser(targetId, nextActive, btn);
+        });
+      });
+    }
+
+    async function fetchAdminUsers() {
+      const token = await getAccessToken();
+
+      if (!token) {
+        return { error: "No active session" };
+      }
+
+      const response = await fetch("/api/admin-users", {
+        method: "GET",
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      });
+
+      const data = await response.json().catch(function() {
+        return {};
+      });
+
+      if (!response.ok) {
+        return { error: data.error || "Failed to load users", details: data.details || "" };
+      }
+
+      return { data: data };
+    }
+
+    async function toggleAdminUser(targetId, nextActive, btn) {
+      const token = await getAccessToken();
+
+      if (!token) {
+        usersMsg.textContent = "No active session.";
+        return;
+      }
+
+      const originalText = btn ? btn.textContent : "";
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Saving...";
+      }
+
+      try {
+        const response = await fetch("/api/admin-toggle-user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+          },
+          body: JSON.stringify({
+            id: targetId,
+            is_active: nextActive
+          })
+        });
+
+        const data = await response.json().catch(function() {
+          return {};
+        });
+
+        if (!response.ok) {
+          usersMsg.textContent = data.error || "Failed to update user.";
+          return;
+        }
+
+        usersMsg.textContent = "";
+        const usersResult = await fetchAdminUsers();
+
+        if (usersResult.error) {
+          usersMsg.textContent = usersResult.error;
+          renderUsers([]);
+        } else {
+          renderUsers(usersResult.data.users || []);
+        }
+      } catch (error) {
+        usersMsg.textContent = error && error.message ? error.message : "Failed to update user.";
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = originalText;
+        }
+      }
+    }
+
+    async function createAdminUser() {
+      createUserMsg.style.color = "#b91c1c";
+      createUserMsg.textContent = "";
+
+      const email = document.getElementById("newAdminEmail").value.trim();
+      const fullName = document.getElementById("newAdminName").value.trim();
+      const password = document.getElementById("newAdminPassword").value;
+      const role = document.getElementById("newAdminRole").value;
+
+      if (!email || !password) {
+        createUserMsg.textContent = "Email and temporary password are required.";
+        return;
+      }
+
+      const token = await getAccessToken();
+
+      if (!token) {
+        createUserMsg.textContent = "No active session.";
+        return;
+      }
+
+      createUserBtn.disabled = true;
+      createUserBtn.textContent = "Creating...";
+
+      try {
+        const response = await fetch("/api/admin-create-user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+          },
+          body: JSON.stringify({
+            email: email,
+            full_name: fullName,
+            password: password,
+            role: role
+          })
+        });
+
+        const data = await response.json().catch(function() {
+          return {};
+        });
+
+        if (!response.ok) {
+          createUserMsg.textContent = data.error || "Failed to create login.";
+          return;
+        }
+
+        createUserMsg.style.color = "#166534";
+        createUserMsg.textContent = "Login created successfully.";
+
+        document.getElementById("newAdminEmail").value = "";
+        document.getElementById("newAdminName").value = "";
+        document.getElementById("newAdminPassword").value = "";
+        document.getElementById("newAdminRole").value = "operator";
+      } catch (error) {
+        createUserMsg.textContent = error && error.message ? error.message : "Failed to create login.";
+      } finally {
+        createUserBtn.disabled = false;
+        createUserBtn.textContent = "Create login";
+      }
+    }
+
+    async function checkUserAndLoad() {
+      loginMsg.textContent = "";
+      dashMsg.textContent = "";
+
+      const meResult = await fetchAdminMe();
+
+      if (meResult.error) {
+        await supabase.auth.signOut();
+        loginBox.classList.remove("hidden");
+        dashboard.classList.add("hidden");
+        loginMsg.textContent = meResult.error;
+        return;
+      }
+
+      const me = meResult.data;
+      currentAdminRole = me && me.admin && me.admin.role ? String(me.admin.role) : "";
+      currentAdminId = me && me.admin && me.admin.id ? String(me.admin.id) : (me && me.user && me.user.id ? String(me.user.id) : "");
+      loginBox.classList.add("hidden");
+      dashboard.classList.remove("hidden");
+
+      createUserCard.classList.add("hidden");
+      manageUsersCard.classList.add("hidden");
+      superAdminSection.classList.add("hidden");
+      adminSection.classList.add("hidden");
+      operatorSection.classList.add("hidden");
+
+      if (me.admin.role === "super_admin") {
+        createUserCard.classList.remove("hidden");
+        manageUsersCard.classList.remove("hidden");
+        superAdminSection.classList.remove("hidden");
+      } else if (me.admin.role === "admin") {
+        adminSection.classList.remove("hidden");
+      } else if (me.admin.role === "operator") {
+        window.location.href = "/";
+        return;
+      }
+
+      userInfo.textContent =
+        "Logged in as: " + me.user.email + " (" + me.admin.role + ")";
+
+      const statsResult = await fetchAdminStats();
+
+      if (statsResult.error) {
+        dashMsg.textContent = statsResult.error;
+        totalRuns.textContent = "0";
+        totalCertificates.textContent = "0";
+        renderRuns([]);
+        return;
+      }
+
+      const stats = statsResult.data;
+      totalRuns.textContent = String(stats.summary.total_runs_in_view || 0);
+      totalCertificates.textContent = String(stats.summary.total_certificates_in_view || 0);
+      renderRuns(stats.recent_runs || []);
+
+      if (me.admin.role === "super_admin") {
+        usersMsg.textContent = "";
+        const usersResult = await fetchAdminUsers();
+
+        if (usersResult.error) {
+          usersMsg.textContent = usersResult.error;
+          renderUsers([]);
+        } else {
+          renderUsers(usersResult.data.users || []);
+        }
+      }
+    }
+
+    loginBtn.addEventListener("click", login);
+    logoutBtn.addEventListener("click", logout);
+    createUserBtn.addEventListener("click", createAdminUser);
+
+    checkUserAndLoad();
+  </script>
+</body>
+</html>

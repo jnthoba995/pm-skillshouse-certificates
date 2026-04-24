@@ -178,10 +178,10 @@
   </div>
 
   <script>
-    const supabase = window.supabase.createClient(
-      "https://xwgdiyiwoaqkwljqfaiy.supabase.co",
-      "PASTE_YOUR_REAL_ANON_KEY_HERE"
-    );
+    const SUPABASE_URL = "https://xwgdiyiwoaqkwljqfaiy.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3Z2RpeWl3b2Fxa3dsanFmYWl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MDI2MDAsImV4cCI6MjA5MjI3ODYwMH0.w4mH_0Jpu9p_ciDIthYMexC5-nlsw5B1SdYOqOu5vD0";
+    window._supabaseClient = window._supabaseClient || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = window._supabaseClient;
 
     const loginBox = document.getElementById("loginBox");
     const dashboard = document.getElementById("dashboard");
@@ -254,9 +254,22 @@
       await checkUserAndLoad();
     }
 
+    function showLoginState(message) {
+      loginBox.classList.remove("hidden");
+      dashboard.classList.add("hidden");
+      loginMsg.textContent = message || "";
+      dashMsg.textContent = "";
+    }
+
+    function showDashboardState() {
+      loginBox.classList.add("hidden");
+      dashboard.classList.remove("hidden");
+      loginMsg.textContent = "";
+    }
+
     async function logout() {
       await supabase.auth.signOut();
-      location.reload();
+      showLoginState("");
     }
 
     async function fetchAdminMe() {
@@ -317,15 +330,12 @@
 
       if (meResult.error) {
         await supabase.auth.signOut();
-        loginBox.classList.remove("hidden");
-        dashboard.classList.add("hidden");
-        loginMsg.textContent = meResult.error;
+        showLoginState(meResult.error);
         return;
       }
 
       const me = meResult.data;
-      loginBox.classList.add("hidden");
-      dashboard.classList.remove("hidden");
+      showDashboardState();
 
       userInfo.textContent =
         "Logged in as: " + me.user.email + " (" + me.admin.role + ")";
@@ -349,7 +359,21 @@
     loginBtn.addEventListener("click", login);
     logoutBtn.addEventListener("click", logout);
 
-    checkUserAndLoad();
+    (async function initAdminPage() {
+      showLoginState("");
+      const token = await getAccessToken();
+      if (token) {
+        await checkUserAndLoad();
+      }
+    })();
+
+    supabase.auth.onAuthStateChange(async function(_event, session) {
+      if (session) {
+        await checkUserAndLoad();
+      } else {
+        showLoginState("");
+      }
+    });
   </script>
 </body>
 </html>

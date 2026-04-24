@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PM SkillsHouse Certificates</title>
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 720px;
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 40px 32px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+    }
+
+    .session-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+    }
+
+    .session-bar-text {
+      font-size: 14px;
+      color: #9a3412;
+      font-weight: 700;
+    }
+
+    .session-bar button {
+      width: auto;
+      padding: 10px 14px;
+      font-size: 14px;
+      box-shadow: none;
+    }
+
+    p {
+      margin: 0 0 24px;
+      color: #6b7280;
+      font-size: 16px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 16px;
+      outline: none;
+      background: #fff;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #f97316;
+    }
+
+    .file-wrap {
+      margin-bottom: 14px;
+    }
+
+    .file-label,
+    .section-title {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #374151;
+      font-weight: 700;
+    }
+
+    input[type="file"] {
+      padding: 12px;
+    }
+
+    .logo-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 0 0 18px;
+    }
+
+    .brand-logo {
+      width: 100%;
+      max-width: 390px;
+      height: auto;
+      display: block;
+    }
+
+    .client-section {
+      margin-bottom: 20px;
+    }
+
+    .client-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .client-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px;
+      background: #ffffff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .client-card:hover {
+      border-color: #f97316;
+    }
+
+    .client-card.active {
+      border-color: #f97316;
+      background: #fff7ed;
+      box-shadow: 0 6px 14px rgba(249, 115, 22, 0.12);
+    }
+
+    .client-card.pending {
+      background: #fffbeb;
+      border-color: #fde68a;
+    }
+
+    .client-card.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: #f9fafb;
+    }
+
+    .client-card.disabled .client-sub {
+      color: #b45309;
+      font-weight: 600;
+    }
+
+    .client-name {
+      font-weight: 700;
+      color: #111827;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .client-sub {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .template-note {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: #f97316;
+      color: white;
+      box-shadow: 0 6px 16px rgba(249, 115, 22, 0.25);
+    }
+
+    .btn-primary:hover {
+      background: #ea580c;
+    }
+
+    .btn-secondary {
+      background: #fff7ed;
+      color: #c2410c;
+    }
+
+    .btn-secondary:hover {
+      background: #ffedd5;
+    }
+
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .status {
+      min-height: 24px;
+      margin-top: 16px;
+      font-size: 14px;
+      color: #374151;
+      white-space: pre-line;
+      text-align: center;
+    }
+
+    .note {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #6b7280;
+      text-align: center;
+    }
+
+    .hint,
+    .preview-box,
+    .delivery-box,
+    .email-box {
+      margin-top: 16px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 13px;
+      color: #4b5563;
+      line-height: 1.6;
+    }
+
+    .activity-card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .activity-card-sub {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 10px;
+    }
+
+    .activity-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .activity-item {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
+    .activity-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .activity-client {
+      font-size: 13px;
+      font-weight: 700;
+      color: #111827;
+      text-transform: capitalize;
+    }
+
+    .activity-count {
+      font-size: 12px;
+      font-weight: 700;
+      color: #9a3412;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 999px;
+      padding: 4px 8px;
+      white-space: nowrap;
+    }
+
+    .activity-meta {
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    .activity-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .activity-toggle-btn {
+      width: auto;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #fed7aa;
+      background: #fff7ed;
+      color: #9a3412;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .activity-toggle-btn:hover {
+      background: #ffedd5;
+    }
+
+    .hint strong,
+    .preview-box strong,
+    .delivery-box strong,
+    .email-box strong {
+      color: #111827;
+    }
+
+    .preview-box,
+    .email-box {
+      display: none;
+    }
+
+    .preview-list {
+      margin-top: 8px;
+      padding-left: 18px;
+    }
+
+    .preview-list li {
+      margin-bottom: 4px;
+    }
+
+    .warning-text {
+      color: #b45309;
+      font-weight: 600;
+    }
+
+    .success-text {
+      color: #166534;
+      font-weight: 600;
+    }
+
+    .muted-text {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .delivery-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .delivery-option {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .delivery-option input[type="checkbox"] {
+      width: auto;
+      margin: 4px 0 0;
+      transform: scale(1.15);
+      accent-color: #f97316;
+    }
+
+    .delivery-option-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 2px;
+    }
+
+    .delivery-option-text {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    .delivery-option.disabled-option {
+      opacity: 0.78;
+      background: #f8fafc;
+    }
+
+    .coming-soon-badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #ffedd5;
+      color: #c2410c;
+      font-size: 11px;
+      font-weight: 700;
+      vertical-align: middle;
+    }
+
+    .add-on-note {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .summary-line {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #374151;
+    }
+
+    @media (max-width: 640px) {
+      .buttons,
+      .client-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .container {
+        padding: 28px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="sessionBar" class="session-bar">
+      <div id="sessionBarText" class="session-bar-text">Checking session...</div>
+      <button id="sessionLogoutBtn" class="btn-primary" type="button">Logout</button>
+    </div>
+
+    <div class="logo-wrap">
+      <img src="assets/pm-skillshouse-logo.png" alt="PM Skillshouse" class="brand-logo" />
+    </div>
+
+    <div style="text-align:center; margin: 0 0 22px;">
+      <h2 style="margin:0 0 8px; font-size: 24px; color:#1f2937;">Operator Workspace</h2>
+      <p style="margin:0; color:#6b7280; font-size:15px;">
+        Upload files, preview certificates, and process delivery batches smoothly.
+      </p>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin: 0 0 18px;">
+      <button id="newBatchBtn" class="btn-primary" type="button">Start New Batch</button>
+      <button id="historyBtn" class="btn-secondary" type="button">Recent Activity</button>
+    </div>
+
+    <div id="quickActivityBox" class="hint" style="margin-top:0; margin-bottom:20px;">
+      <strong>Workspace Tip</strong><br />
+      Use this page to prepare certificates, download print-ready files, and complete delivery steps.
+    </div>
+
+    <div class="client-section">
+      <div class="section-title">Select Client / Certificate Template</div>
+
+      <div class="client-grid">
+        <div class="client-card pending" data-client="pm">
+          <div class="client-name">PM Skillshouse</div>
+          <div class="client-sub">Template setup pending</div>
+        </div>
+
+        <div class="client-card active" data-client="liberty">
+          <div class="client-name">Liberty</div>
+          <div class="client-sub">Active template</div>
+        </div>
+
+        <div class="client-card" data-client="stanlib">
+          <div class="client-name">STANLIB</div>
+          <div class="client-sub">Active template</div>
+        </div>
+
+        <div class="client-card pending" data-client="alexforbes">
+          <div class="client-name">Alexforbes</div>
+          <div class="client-sub">Template setup pending</div>
+        </div>
+
+        <div class="client-card disabled" data-client="sanlam">
+          <div class="client-name">Sanlam</div>
+          <div class="client-sub">Coming Soon</div>
+        </div>
+      </div>
+
+      <div id="templateNote" class="template-note">
+        Liberty template selected.
+      </div>
+    </div>
+
+    <p>Upload your Excel file, preview one certificate, choose delivery options, then process the final certificates.</p>
+
+    <div class="file-wrap">
+      <label class="file-label" for="excelFile">Excel file</label>
+      <input id="excelFile" type="file" accept=".xlsx,.xls" />
+    </div>
+
+    <input id="certificateDate" type="text" placeholder="Certificate Date (e.g. 19-04-2026)" />
+
+    <div class="buttons">
+      <button id="previewBtn" class="btn-secondary" type="button">Preview First Certificate</button>
+      <button id="generateBtn" class="btn-primary" type="button">Process Certificates</button>
+    </div>
+
+    <div id="statusText" class="status"></div>
+
+    <div id="previewBox" class="preview-box">
+      <strong>Preview summary</strong>
+      <div id="previewCount" style="margin-top:8px;"></div>
+      <ol id="previewList" class="preview-list"></ol>
+    </div>
+
+    <div class="delivery-box">
+      <div class="section-title">Delivery Options</div>
+      <div class="muted-text">Choose one or more ways to prepare and deliver the certificates.</div>
+
+      <div class="delivery-grid">
+        <label class="delivery-option">
+          <input id="deliveryMerged" type="checkbox" checked />
+          <div>
+            <div class="delivery-option-title">Download merged PDF</div>
+            <div class="delivery-option-text">One print-ready file for all participants.</div>
+          </div>
+        </label>
+
+        <label class="delivery-option">
+          <input id="deliverySeparate" type="checkbox" />
+          <div>
+            <div class="delivery-option-title">Download separate PDFs</div>
+            <div class="delivery-option-text">One PDF per participant in a ZIP folder.</div>
+          </div>
+        </label>
+
+        <label class="delivery-option disabled-option">
+          <input id="deliveryEmail" type="checkbox" disabled />
+          <div>
+            <div class="delivery-option-title">
+              Send by email
+              <span class="coming-soon-badge">Coming Soon</span>
+            </div>
+            <div class="delivery-option-text">
+              Send each participant their own certificate directly as an optional add-on.
+            </div>
+          </div>
+        </label>
+      </div>
+
+      <div class="add-on-note">
+        <strong>Email delivery add-on:</strong> This feature is kept visible for future rollout and proposal costing.
+        It requires verified email sending setup and domain configuration before it can be activated.
+      </div>
+    </div>
+
+    <div id="emailBox" class="email-box">
+      <strong>Email Settings</strong>
+      <div class="muted-text" style="margin-top:6px; margin-bottom:12px;">
+        If email delivery is selected, your Excel file must include an <strong>Email</strong> column.
+        Rows without an email address will be skipped for sending.
+      </div>
+
+      <input id="senderName" type="text" value="PM Skillshouse" placeholder="Sender Name" />
+      <input id="emailSubject" type="text" value="Your Certificate of Attendance" placeholder="Email Subject" />
+      <textarea id="emailMessage" placeholder="Email message">Dear participant,
+
+Please find your certificate attached.
+
+Thank you for attending the workshop.
+
+Regards,
+PM Skillshouse</textarea>
+    </div>
+
+    <div class="hint">
+      <strong>Expected Excel headings for current version:</strong><br />
+      Full Name<br />
+      ID Number<br />
+      Email (reserved for future email delivery add-on)
+    </div>
+
+    <div class="note">One certificate engine for multiple PM Skillshouse client templates.</div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://xwgdiyiwoaqkwljqfaiy.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3Z2RpeWl3b2Fxa3dsanFmYWl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MDI2MDAsImV4cCI6MjA5MjI3ODYwMH0.w4mH_0Jpu9p_ciDIthYMexC5-nlsw5B1SdYOqOu5vD0";
+
+    if (!window._supabaseClient) {
+      window._supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    var supabase = window._supabaseClient;
+
+    const sessionBar = document.getElementById("sessionBar");
+    const sessionBarText = document.getElementById("sessionBarText");
+    const sessionLogoutBtn = document.getElementById("sessionLogoutBtn");
+    const newBatchBtn = document.getElementById("newBatchBtn");
+    const historyBtn = document.getElementById("historyBtn");
+    const quickActivityBox = document.getElementById("quickActivityBox");
+
+    let recentActivityRows = [];
+    let recentActivityExpanded = false;
+
+    async function getAccessToken() {
+      const sessionResult = await supabase.auth.getSession();
+      const session = sessionResult && sessionResult.data ? sessionResult.data.session : null;
+      return session && session.access_token ? session.access_token : null;
+    }
+
+    async function fetchAdminMe() {
+      const token = await getAccessToken();
+
+      if (!token) {
+        return { error: "No active session" };
+      }
+
+      const response = await fetch("/api/admin-me", {
+        method: "GET",
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      });
+
+      const data = await response.json().catch(function() {
+        return {};
+      });
+
+      if (!response.ok) {
+        return { error: data.error || "Failed to load profile" };
+      }
+
+      return { data: data };
+    }
+
+    function formatActivityDate(value) {
+      if (!value) return "";
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return value;
+      return d.toLocaleString();
+    }
+
+    function renderRecentActivityCard() {
+      if (!quickActivityBox) {
+        return;
+      }
+
+      if (!recentActivityRows.length) {
+        quickActivityBox.innerHTML = "<strong>Recent Activity</strong><br />No recent certificate runs found yet.";
+        return;
+      }
+
+      const visibleRows = recentActivityExpanded ? recentActivityRows : recentActivityRows.slice(0, 3);
+
+      const items = visibleRows.map(function(row) {
+        const client = row && row.client ? String(row.client) : "—";
+        const count = row && row.certificate_count ? String(row.certificate_count) : "0";
+        const delivery = row && Array.isArray(row.delivery_types) && row.delivery_types.length
+          ? row.delivery_types.join(", ")
+          : "—";
+        const date = formatActivityDate(row && row.created_at ? row.created_at : "");
+        return "<li class=\"activity-item\"><div class=\"activity-item-top\"><div class=\"activity-client\">" + client + "</div><div class=\"activity-count\">" + count + " certificates</div></div><div class=\"activity-meta\">Delivery: " + delivery + "<br />" + date + "</div></li>";
+      }).join("");
+
+      const shouldShowToggle = recentActivityRows.length > 3;
+      const toggleLabel = recentActivityExpanded ? "Show Less" : "View More Activity";
+
+      quickActivityBox.innerHTML =
+        "<div class=\"activity-card-title\"><span>Recent Activity</span></div>" +
+        "<div class=\"activity-card-sub\">Latest certificate runs from the workspace.</div>" +
+        "<ul class=\"activity-list\">" + items + "</ul>" +
+        (shouldShowToggle
+          ? "<div class=\"activity-actions\"><button id=\"activityToggleBtn\" class=\"activity-toggle-btn\" type=\"button\">" + toggleLabel + "</button></div>"
+          : "");
+
+      const toggleBtn = document.getElementById("activityToggleBtn");
+      if (toggleBtn) {
+        toggleBtn.addEventListener("click", function() {
+          recentActivityExpanded = !recentActivityExpanded;
+          renderRecentActivityCard();
+        });
+      }
+    }
+
+    async function loadRecentActivity() {
+      const token = await getAccessToken();
+
+      if (!token || !quickActivityBox) {
+        return;
+      }
+
+      const response = await fetch("/api/admin-stats", {
+        method: "GET",
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      });
+
+      const data = await response.json().catch(function() {
+        return {};
+      });
+
+      if (!response.ok) {
+        quickActivityBox.innerHTML = "<strong>Recent Activity</strong><br />Unable to load recent activity right now.";
+        return;
+      }
+
+      recentActivityRows = data && Array.isArray(data.recent_runs) ? data.recent_runs : [];
+      recentActivityExpanded = false;
+      renderRecentActivityCard();
+    }
+
+    async function ensureOperatorSession() {
+      const meResult = await fetchAdminMe();
+
+      if (meResult.error) {
+        window.location.href = "/admin.html";
+        return false;
+      }
+
+      const me = meResult.data;
+      const role = me && me.admin ? me.admin.role : "";
+
+      if (!role || !["operator", "admin", "super_admin"].includes(role)) {
+        await supabase.auth.signOut();
+        window.location.href = "/admin.html";
+        return false;
+      }
+
+      const displayName =
+        (me.admin && me.admin.full_name && String(me.admin.full_name).trim()) ||
+        (me.user && me.user.email) ||
+        "User";
+
+      sessionBar.style.display = "flex";
+      sessionBarText.textContent = "Logged in as: " + displayName;
+      await loadRecentActivity();
+      return true;
+    }
+
+    async function logoutFromOperatorPage() {
+      await supabase.auth.signOut();
+      window.location.href = "/admin.html";
+    }
+
+    sessionLogoutBtn.addEventListener("click", logoutFromOperatorPage);
+
+    function startNewBatch() {
+      const excelFile = document.getElementById("excelFile");
+      const certificateDate = document.getElementById("certificateDate");
+      const statusText = document.getElementById("statusText");
+      const previewBox = document.getElementById("previewBox");
+      const previewCount = document.getElementById("previewCount");
+      const previewList = document.getElementById("previewList");
+
+      if (excelFile) excelFile.value = "";
+      if (certificateDate) certificateDate.value = "";
+      if (statusText) statusText.textContent = "Ready for a new certificate batch.";
+      if (previewBox) previewBox.style.display = "none";
+      if (previewCount) previewCount.textContent = "";
+      if (previewList) previewList.innerHTML = "";
+      if (quickActivityBox) {
+        quickActivityBox.innerHTML = "<strong>Workspace Tip</strong><br />New batch started. Select a client, upload a file, add the certificate date, then preview or process.";
+      }
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function showRecentActivityHint() {
+      const statusText = document.getElementById("statusText");
+      await loadRecentActivity();
+      if (statusText) {
+        statusText.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    if (newBatchBtn) newBatchBtn.addEventListener("click", startNewBatch);
+    if (historyBtn) historyBtn.addEventListener("click", showRecentActivityHint);
+
+    // Safe logging helper
+    async function logCertificateRunSafe(data) {
+      try {
+        await fetch("/api/log-run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+      } catch (err) {
+        console.log("Log run skipped (non-blocking):", err);
+      }
+    }
+    ensureOperatorSession();
+
+    let selectedClient = "liberty";
+
+    function updateEmailBoxVisibility() {
+      const emailBox = document.getElementById("emailBox");
+      emailBox.style.display = "none";
+    }
+
+    function getSelectedDeliveryOptions() {
+      return {
+        merged: document.getElementById("deliveryMerged").checked,
+        separate: document.getElementById("deliverySeparate").checked,
+        email: false
+      };
+    }
+
+    function validateDeliveryOptions() {
+      const options = getSelectedDeliveryOptions();
+
+      if (!options.merged && !options.separate) {
+        throw new Error("Please choose at least one active delivery method.");
+      }
+
+      return options;
+    }
+
+    function sanitizeFileName(value) {
+      return String(value || "")
+        .replace(/[\\\/:*?"<>|]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function readDeliveryOptionLabels() {
+      const labels = [];
+      if (document.getElementById("deliveryMerged").checked) labels.push("Merged PDF");
+      if (document.getElementById("deliverySeparate").checked) labels.push("Separate PDFs");
+      labels.push("Email (Coming Soon)");
+      return labels;
+    }
+
+    function updateTemplateNote() {
+      const templateNote = document.getElementById("templateNote");
+
+      if (selectedClient === "liberty") {
+        templateNote.textContent = "Liberty template selected.";
+        return;
+      }
+
+      if (selectedClient === "stanlib") {
+        templateNote.textContent = "STANLIB template selected.";
+        return;
+      }
+
+      if (selectedClient === "pm") {
+        templateNote.textContent = "PM Skillshouse is visible in the parallel setup, but its certificate template is not loaded yet.";
+        return;
+      }
+
+      if (selectedClient === "alexforbes") {
+        templateNote.textContent = "Alexforbes is visible in the parallel setup, but its certificate template is not loaded yet.";
+        return;
+      }
+
+      if (selectedClient === "sanlam") {
+        templateNote.textContent = "Sanlam template is coming soon.";
+      }
+    }
+
+    async function readExcelRows() {
+      const excelFileInput = document.getElementById("excelFile");
+      const certificateDate = document.getElementById("certificateDate").value.trim();
+
+      if (!excelFileInput.files || !excelFileInput.files[0]) {
+        throw new Error("Please upload an Excel file.");
+      }
+
+      if (!certificateDate) {
+        throw new Error("Please enter the certificate date.");
+      }
+
+      const excelBuffer = await excelFileInput.files[0].arrayBuffer();
+      const workbook = XLSX.read(excelBuffer, { type: "array" });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+      if (!rows.length) {
+        throw new Error("The Excel file has no data rows.");
+      }
+
+      const cleanedRows = rows
+        .map(function (row) {
+          return {
+            fullName: String(row["Full Name"] || "").trim(),
+            idNumber: String(row["ID Number"] || "").trim(),
+            email: String(row["Email"] || "").trim()
+          };
+        })
+        .filter(function (row) {
+          return row.fullName && row.idNumber;
+        });
+
+      if (!cleanedRows.length) {
+        throw new Error("No valid rows found. Please use headings exactly: Full Name, ID Number");
+      }
+
+      const uniqueMap = new Map();
+
+      cleanedRows.forEach(function (row) {
+        const key = row.fullName + "||" + row.idNumber;
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, row);
+        }
+      });
+
+      const uniqueRows = Array.from(uniqueMap.values());
+      const duplicatesRemoved = cleanedRows.length - uniqueRows.length;
+      const emailEligibleCount = uniqueRows.filter(function (row) {
+        return !!row.email;
+      }).length;
+      const emailMissingCount = uniqueRows.length - emailEligibleCount;
+
+      return {
+        rows: uniqueRows,
+        certificateDate: certificateDate,
+        originalCount: cleanedRows.length,
+        uniqueCount: uniqueRows.length,
+        duplicatesRemoved: duplicatesRemoved,
+        emailEligibleCount: emailEligibleCount,
+        emailMissingCount: emailMissingCount
+      };
+    }
+
+    async function loadTemplateBytes() {
+      let filePath = "";
+
+      if (selectedClient === "liberty") {
+        filePath = "Mind%20My%20Money%20Certificate%20final%20copy%202%20(1).pdf";
+      } else if (selectedClient === "stanlib") {
+        filePath = "Stanlib%20CFE%20certificate%202023.pdf";
+      } else if (selectedClient === "pm") {
+        throw new Error("PM Skillshouse template is not loaded yet.");
+      } else if (selectedClient === "alexforbes") {
+        throw new Error("Alexforbes template is not loaded yet.");
+      } else {
+        throw new Error("Selected template is not available yet.");
+      }
+
+      const response = await fetch(filePath);
+
+      if (!response.ok) {
+        throw new Error("Certificate template could not be loaded.");
+      }
+
+      return await response.arrayBuffer();
+    }
+
+    function getTemplateSettings() {
+      if (selectedClient === "stanlib") {
+        return {
+          nameYRatio: 0.50, // changed from 0.57
+          idYRatio: 0.39, // changed from 0.43
+          dateYRatio: 0.22, // changed from 0.18
+          nameSize: 24,
+          idSize: 18,
+          dateSize: 15,
+          rightMargin: 105
+        };
+      }
+
+      return {
+        nameYRatio: 0.515,
+        idYRatio: 0.41,
+        dateYRatio: 0.245,
+        nameSize: 24,
+        idSize: 20,
+        dateSize: 16,
+        rightMargin: 120
+      };
+    }
+
+    async function buildSingleCertificatePdf(templateBytes, fullName, idNumber, certificateDate) {
+      const pdfDoc = await PDFLib.PDFDocument.load(templateBytes);
+      const page = pdfDoc.getPages()[0];
+
+      const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+      const boldFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+      const textColor = PDFLib.rgb(0.2, 0.2, 0.2);
+      const nameColor = PDFLib.rgb(0.1, 0.1, 0.1);
+
+      const pageWidth = page.getWidth();
+      const pageHeight = page.getHeight();
+      const settings = getTemplateSettings();
+
+      const nameSize = settings.nameSize;
+      const idSize = settings.idSize;
+      const dateSize = settings.dateSize;
+
+      const nameWidth = boldFont.widthOfTextAtSize(fullName, nameSize);
+      const idWidth = font.widthOfTextAtSize(idNumber, idSize);
+      const dateWidth = font.widthOfTextAtSize(certificateDate, dateSize);
+
+      const nameX = (pageWidth - nameWidth) / 2;
+      const idX = (pageWidth - idWidth) / 2;
+      const dateX = pageWidth - dateWidth - settings.rightMargin;
+
+      page.drawText(fullName, {
+        x: nameX,
+        y: pageHeight * settings.nameYRatio,
+        size: nameSize,
+        font: boldFont,
+        color: nameColor
+      });
+
+      page.drawText(idNumber, {
+        x: idX,
+        y: pageHeight * settings.idYRatio,
+        size: idSize,
+        font: font,
+        color: textColor
+      });
+
+      page.drawText(certificateDate, {
+        x: dateX,
+        y: pageHeight * settings.dateYRatio,
+        size: dateSize,
+        font: font,
+        color: textColor
+      });
+
+      return pdfDoc;
+    }
+
+    function showPreviewSummary(result) {
+      const previewBox = document.getElementById("previewBox");
+      const previewCount = document.getElementById("previewCount");
+      const previewList = document.getElementById("previewList");
+      const selectedMethods = readDeliveryOptionLabels();
+
+      let clientLabel = "Liberty";
+      if (selectedClient === "pm") clientLabel = "PM Skillshouse";
+      if (selectedClient === "stanlib") clientLabel = "STANLIB";
+      if (selectedClient === "alexforbes") clientLabel = "Alexforbes";
+      if (selectedClient === "sanlam") clientLabel = "Sanlam";
+
+      previewCount.innerHTML =
+        "Selected template: " + clientLabel + "<br>" +
+        "Valid rows found: " + result.originalCount + "<br>" +
+        "Unique records used: " + result.uniqueCount;
+
+      if (result.duplicatesRemoved > 0) {
+        previewCount.innerHTML +=
+          "<br><span class='warning-text'>Duplicates detected and removed: " +
+          result.duplicatesRemoved +
+          "</span><br><span class='muted-text'>Only unique records will be used for certificate generation.</span>";
+      }
+
+      previewCount.innerHTML +=
+        "<br><span class='muted-text'>Email-ready rows in file: " + result.emailEligibleCount +
+        " | Missing email: " + result.emailMissingCount + "</span>";
+
+      previewCount.innerHTML +=
+        "<div class='summary-line'><strong>Delivery selected:</strong> " +
+        (selectedMethods.length ? selectedMethods.join(" + ") : "None") +
+        "</div>";
+
+      previewList.innerHTML = "";
+
+      result.rows.slice(0, 5).forEach(function (row) {
+        const li = document.createElement("li");
+        li.textContent = row.fullName + " — " + row.idNumber;
+        previewList.appendChild(li);
+      });
+
+      previewBox.style.display = "block";
+    }
+
+    async function previewFirstCertificate() {
+      const statusText = document.getElementById("statusText");
+      const previewBtn = document.getElementById("previewBtn");
+      const generateBtn = document.getElementById("generateBtn");
+
+      try {
+        previewBtn.disabled = true;
+        generateBtn.disabled = true;
+        statusText.textContent = "Preparing preview...";
+
+        validateDeliveryOptions();
+
+        const result = await readExcelRows();
+        showPreviewSummary(result);
+
+        const firstRow = result.rows[0];
+        const templateBytes = await loadTemplateBytes();
+
+        const previewPdf = await buildSingleCertificatePdf(
+          templateBytes,
+          firstRow.fullName,
+          firstRow.idNumber,
+          result.certificateDate
+        );
+
+        const previewBytes = await previewPdf.save();
+        const blob = new Blob([previewBytes], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+
+        window.open(url, "_blank");
+        statusText.textContent = "Preview opened for the first certificate.";
+      } catch (error) {
+        console.error(error);
+        statusText.textContent = error.message || "Something went wrong while preparing the preview.";
+      } finally {
+        previewBtn.disabled = false;
+        generateBtn.disabled = false;
+      }
+    }
+
+    async function generateBulkCertificates() {
+      const statusText = document.getElementById("statusText");
+      const previewBtn = document.getElementById("previewBtn");
+      const generateBtn = document.getElementById("generateBtn");
+
+      try {
+        previewBtn.disabled = true;
+        generateBtn.disabled = true;
+        statusText.textContent = "Preparing certificates...";
+
+        const options = validateDeliveryOptions();
+        const result = await readExcelRows();
+        showPreviewSummary(result);
+
+        const templateBytes = await loadTemplateBytes();
+        let mergedPdf = null;
+        let zip = null;
+
+        if (options.merged) {
+          mergedPdf = await PDFLib.PDFDocument.create();
+        }
+
+        if (options.separate) {
+          zip = new JSZip();
+        }
+
+        for (let i = 0; i < result.rows.length; i++) {
+          const row = result.rows[i];
+
+          const singlePdf = await buildSingleCertificatePdf(
+            templateBytes,
+            row.fullName,
+            row.idNumber,
+            result.certificateDate
+          );
+
+          const singlePdfBytes = await singlePdf.save();
+
+          if (options.merged) {
+            const copiedPages = await mergedPdf.copyPages(singlePdf, [0]);
+            mergedPdf.addPage(copiedPages[0]);
+          }
+
+          if (options.separate) {
+            const safeName = sanitizeFileName(row.fullName) || ("Certificate " + (i + 1));
+            zip.file(safeName + " - Certificate.pdf", singlePdfBytes);
+          }
+
+          statusText.textContent =
+            "Processing " + result.rows.length + " certificate(s)...\nCompleted: " +
+            (i + 1) + " of " + result.rows.length;
+        }
+
+        if (options.merged) {
+          const mergedPdfBytes = await mergedPdf.save();
+          const mergedBlob = new Blob([mergedPdfBytes], { type: "application/pdf" });
+          const mergedUrl = URL.createObjectURL(mergedBlob);
+
+          const mergedLink = document.createElement("a");
+          mergedLink.href = mergedUrl;
+          mergedLink.download = "PM SkillsHouse Certificates.pdf";
+          document.body.appendChild(mergedLink);
+          mergedLink.click();
+          document.body.removeChild(mergedLink);
+
+          URL.revokeObjectURL(mergedUrl);
+        }
+
+        if (options.separate) {
+          const zipBlob = await zip.generateAsync({ type: "blob" });
+          const zipUrl = URL.createObjectURL(zipBlob);
+
+          const zipLink = document.createElement("a");
+          zipLink.href = zipUrl;
+          zipLink.download = "PM SkillsHouse Certificates ZIP.zip";
+          document.body.appendChild(zipLink);
+          zipLink.click();
+          document.body.removeChild(zipLink);
+
+          URL.revokeObjectURL(zipUrl);
+        }
+
+        const completedActions = [];
+        if (options.merged) completedActions.push("merged PDF downloaded");
+        if (options.separate) completedActions.push("ZIP of separate PDFs downloaded");
+        completedActions.push("email delivery kept visible as Coming Soon add-on");
+
+        statusText.textContent =
+          "Done. " + result.rows.length + " certificate(s) processed successfully.\n" +
+          completedActions.join(" + ") + ".";
+
+        // Safe metadata logging (non-blocking)
+        try {
+          const deliveryTypes = [];
+          if (options.merged) deliveryTypes.push("merged_pdf");
+          if (options.separate) deliveryTypes.push("zip");
+
+          logCertificateRunSafe({
+            client: selectedClient,
+            certificate_count: result.rows.length,
+            delivery_types: deliveryTypes,
+            source: "web"
+          });
+        } catch (e) {
+          console.log("Logging skipped");
+        }
+
+      } catch (error) {
+        console.error(error);
+        statusText.textContent = error.message || "Something went wrong while processing the certificates.";
+      } finally {
+        previewBtn.disabled = false;
+        generateBtn.disabled = false;
+      }
+    }
+
+    function refreshPreviewIfVisible() {
+      const previewBox = document.getElementById("previewBox");
+      if (previewBox.style.display === "block") {
+        readExcelRows().then(showPreviewSummary).catch(function () {});
+      }
+    }
+
+    document.querySelectorAll(".client-card").forEach(function(card) {
+      card.addEventListener("click", function() {
+        if (card.classList.contains("disabled")) return;
+
+        document.querySelectorAll(".client-card").forEach(function(c) {
+          c.classList.remove("active");
+        });
+
+        card.classList.add("active");
+        selectedClient = card.getAttribute("data-client");
+        updateTemplateNote();
+        refreshPreviewIfVisible();
+      });
+    });
+
+    document.getElementById("deliveryMerged").addEventListener("change", refreshPreviewIfVisible);
+    document.getElementById("deliverySeparate").addEventListener("change", refreshPreviewIfVisible);
+
+    document.getElementById("previewBtn").addEventListener("click", previewFirstCertificate);
+    document.getElementById("generateBtn").addEventListener("click", generateBulkCertificates);
+
+    updateEmailBoxVisibility();
+    updateTemplateNote();
+  </script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+module.exports = async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  try {
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const authHeader = req.headers.authorization || "";
+
+    if (!SUPABASE_URL || !SERVICE_KEY) {
+      return res.status(500).json({ error: "Missing Supabase environment variables" });
+    }
+
+    if (!authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Missing bearer token" });
+    }
+
+    const accessToken = authHeader.replace("Bearer ", "").trim();
+
+    const userRes = await fetch(SUPABASE_URL + "/auth/v1/user", {
+      method: "GET",
+      headers: {
+        "apikey": SERVICE_KEY,
+        "Authorization": "Bearer " + accessToken
+      }
+    });
+
+    if (!userRes.ok) {
+      return res.status(401).json({ error: "Invalid session" });
+    }
+
+    const user = await userRes.json();
+
+    const adminRes = await fetch(
+      SUPABASE_URL + "/rest/v1/admin_users?id=eq." + encodeURIComponent(user.id) + "&select=id,email,role,is_active",
+      {
+        method: "GET",
+        headers: {
+          "apikey": SERVICE_KEY,
+          "Authorization": "Bearer " + SERVICE_KEY,
+          "Accept": "application/json"
+        }
+      }
+    );
+
+    if (!adminRes.ok) {
+      const adminText = await adminRes.text();
+      return res.status(500).json({ error: "Failed to verify admin user", details: adminText });
+    }
+
+    const adminRows = await adminRes.json();
+    const admin = Array.isArray(adminRows) ? adminRows[0] : null;
+
+    if (!admin || !admin.is_active || admin.role !== "super_admin") {
+      return res.status(403).json({ error: "Not allowed" });
+    }
+
+    const body = req.body || {};
+    const email = String(body.email || "").trim().toLowerCase();
+    const password = String(body.password || "");
+    const fullName = body.full_name == null ? null : String(body.full_name).trim();
+    const role = String(body.role || "operator").trim();
+
+    const allowedRoles = new Set(["admin", "operator", "super_admin"]);
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    if (!allowedRoles.has(role)) {
+      return res.status(400).json({ error: "Invalid role" });
+    }
+
+    const createRes = await fetch(SUPABASE_URL + "/auth/v1/admin/users", {
+      method: "POST",
+      headers: {
+        "apikey": SERVICE_KEY,
+        "Authorization": "Bearer " + SERVICE_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password,
+        email_confirm: true
+      })
+    });
+
+    const created = await createRes.json().catch(function() {
+      return {};
+    });
+
+    if (!createRes.ok) {
+      return res.status(400).json({
+        error: created.error || created.msg || "User creation failed",
+        details: created
+      });
+    }
+
+    const newUserId = created && (created.id || (created.user && created.user.id)) ? (created.id || created.user.id) : null;
+
+    if (!newUserId) {
+      return res.status(500).json({ error: "Auth user created but no user id returned" });
+    }
+
+    const insertRes = await fetch(SUPABASE_URL + "/rest/v1/admin_users", {
+      method: "POST",
+      headers: {
+        "apikey": SERVICE_KEY,
+        "Authorization": "Bearer " + SERVICE_KEY,
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+      },
+      body: JSON.stringify({
+        id: newUserId,
+        email: email,
+        full_name: fullName,
+        role: role,
+        is_active: true
+      })
+    });
+
+    const inserted = await insertRes.json().catch(function() {
+      return null;
+    });
+
+    if (!insertRes.ok) {
+      return res.status(500).json({
+        error: "Auth user created but admin profile insert failed",
+        details: inserted
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      user: {
+        id: newUserId,
+        email: email,
+        full_name: fullName,
+        role: role
+      },
+      admin_record: inserted
+    });
+  } catch (err) {
+    return res.status(500).json({
+      error: "Unexpected server error",
+      details: err && err.message ? err.message : String(err)
+    });
+  }
+};
