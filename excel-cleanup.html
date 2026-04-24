@@ -22,35 +22,35 @@
     <main class="app-main">
       <div class="page-title">Excel Cleanup</div>
 
-      <section class="module-card" style="margin-bottom:20px;">
+      <section class="module-card cleanup-panel" style="margin-bottom:20px;">
         <h3>Upload Excel File</h3>
 
-        <div class="cleanup-toolbar cleanup-toolbar-main">
+        <div class="cleanup-row cleanup-file-row">
           <div class="cleanup-file-wrap">
             <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" />
-            <div id="fileNameText" class="cleanup-file-name">No file chosen</div>
+            <span id="fileNameText" class="cleanup-file-name">No file chosen</span>
           </div>
 
-          <button id="processBtn" class="primary-btn cleanup-btn" type="button">Load Workbook</button>
+          <button id="processBtn" class="primary-btn cleanup-action-btn" type="button">Load Workbook</button>
 
-          <div class="cleanup-select-wrap">
-            <select id="sheetSelect" class="sheet-select">
-              <option value="">Select sheet</option>
-            </select>
-          </div>
+          <select id="sheetSelect" class="sheet-select cleanup-select">
+            <option value="">Select sheet</option>
+          </select>
 
-          <div class="cleanup-select-wrap">
-            <select id="ruleSelect" class="sheet-select">
-              <option value="auto">Auto detect</option>
-              <option value="training_register">Training Register</option>
-              <option value="generic">Generic workbook</option>
-            </select>
-          </div>
-
-          <button id="exportBtn" class="secondary-btn cleanup-btn" type="button">Export Cleaned Excel</button>
+          <select id="ruleSelect" class="sheet-select cleanup-select">
+            <option value="auto">Auto detect</option>
+            <option value="training_register">Training Register</option>
+            <option value="generic">Generic workbook</option>
+          </select>
         </div>
 
-        <div class="cleanup-toolbar cleanup-toolbar-meta">
+        <div class="cleanup-row cleanup-action-row">
+          <button id="saveDraftBtn" class="secondary-btn cleanup-action-btn compact-action-btn" type="button">Save Draft</button>
+          <button id="restoreDraftBtn" class="secondary-btn cleanup-action-btn compact-action-btn" type="button">Restore Draft</button>
+          <button id="exportBtn" class="secondary-btn cleanup-action-btn compact-action-btn" type="button">Export Cleaned Excel</button>
+        </div>
+
+        <div class="cleanup-row cleanup-filter-row">
           <label class="toggle-chip">
             <input type="checkbox" id="duplicatesOnlyToggle" />
             <span>Show duplicates only</span>
@@ -70,17 +70,23 @@
         <div id="statusText">No file processed yet</div>
       </section>
 
-      <section class="module-card">
-        <div class="section-head">
-          <h3>Captured Data Review</h3>
-          <div id="summaryText" class="summary-text">No rows loaded</div>
+      <section class="module-card review-card">
+        <div class="section-head review-head">
+          <div>
+            <h3>Captured Data Review</h3>
+            <div id="summaryText" class="summary-text">No rows loaded</div>
+          </div>
+
+          <button id="expandReviewBtn" class="secondary-btn cleanup-action-btn compact-action-btn" type="button">Expand Review</button>
         </div>
 
-        <div class="table-wrap">
-          <table id="dataTable" class="data-table">
-            <thead></thead>
-            <tbody id="tableBody"></tbody>
-          </table>
+        <div class="review-scroll-shell">
+          <div class="table-wrap">
+            <table id="dataTable" class="data-table">
+              <thead></thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
         </div>
       </section>
     </main>
