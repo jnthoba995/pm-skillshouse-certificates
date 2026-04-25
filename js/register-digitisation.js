@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const processBtn = document.getElementById('processRegisterBtn')
   const summary = document.getElementById('summaryText')
   const tableBody = document.getElementById('tableBody')
+  const clientSelect = document.getElementById('registerClient')
 
   let capturedRows = []
 
@@ -17,32 +18,46 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   if (processBtn) {
-    processBtn.addEventListener('click', function () {
-      capturedRows = [
-        {
-          name: 'John',
-          surname: 'Doe',
-          idNumber: '',
-          contact: '',
-          email: '',
-          gender: '',
-          status: 'Needs review'
-        },
-        {
-          name: '',
-          surname: 'Smith',
-          idNumber: '123',
-          contact: '',
-          email: '',
-          gender: '',
-          status: 'Needs review'
-        }
-      ]
+    processBtn.addEventListener('click', async function () {
+      const file = fileInput.files && fileInput.files[0]
 
-      renderRows()
-      if (status) status.innerText = 'Register processed. Please review highlighted fields before exporting.'
-      if (summary) summary.innerText = capturedRows.length + ' rows loaded for review'
+      if (!file) {
+        if (status) status.innerText = 'Please upload a register first.'
+        return
+      }
+
+      if (status) status.innerText = 'Sending register for review...'
+
+      try {
+        const result = await requestRegisterReview(file)
+
+        capturedRows = result.rows || []
+        renderRows()
+
+        if (status) status.innerText = result.message || 'Register processed. Please review highlighted fields before exporting.'
+        if (summary) summary.innerText = capturedRows.length + ' rows loaded for review'
+      } catch (error) {
+        console.error('REGISTER REVIEW ERROR:', error)
+        if (status) status.innerText = 'Register review failed. Please try again or contact admin.'
+      }
     })
+  }
+
+  async function requestRegisterReview(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('client', clientSelect ? clientSelect.value : '')
+
+    const response = await fetch('/api/register-review', {
+      method: 'POST',
+      body: formData
+    })
+
+    if (!response.ok) {
+      throw new Error('Register review API failed')
+    }
+
+    return response.json()
   }
 
   function renderRows() {
@@ -66,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function () {
           <td contenteditable="true">${escapeHtml(row.contact)}</td>
           <td contenteditable="true">${escapeHtml(row.email)}</td>
           <td contenteditable="true">${escapeHtml(row.gender)}</td>
-          <td><span class="status-pill status-duplicate">${escapeHtml(row.status)}</span></td>
+          <td><span class="status-pill status-duplicate">${escapeHtml(row.status || 'Review')}</span></td>
         </tr>
       `
     }).join('')
