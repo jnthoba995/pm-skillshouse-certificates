@@ -4,9 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Register Digitisation</title>
-  <link rel="stylesheet" href="css/base.css" />
-  <link rel="stylesheet" href="css/layout.css" />
-  <link rel="stylesheet" href="css/dashboard.css" />
+
+  <link rel="stylesheet" href="css/base.css?v=10" />
+  <link rel="stylesheet" href="css/layout.css?v=10" />
+  <link rel="stylesheet" href="css/modules.css?v=10" />
+  <link rel="stylesheet" href="css/forms.css?v=10" />
+  <link rel="stylesheet" href="css/tables.css?v=10" />
 </head>
 <body>
   <div id="appHeader"></div>
@@ -16,14 +19,84 @@
 
     <main class="app-main">
       <div class="page-title">Register Digitisation</div>
-      <div class="card">
-        <div class="card-title">Module Status</div>
-        <div class="card-value">Shell Ready</div>
-      </div>
+
+      <section class="module-card" style="margin-bottom:20px;">
+        <div class="section-head">
+          <div>
+            <h3>Upload Manual Register</h3>
+            <div class="summary-text">Convert scanned attendance registers into editable digital records.</div>
+          </div>
+        </div>
+
+        <div class="cleanup-row cleanup-file-row">
+          <div class="cleanup-file-wrap">
+            <input type="file" id="registerFile" accept=".pdf,image/*" />
+            <span id="registerFileName" class="cleanup-file-name">No file chosen</span>
+          </div>
+
+          <select id="registerClient" class="sheet-select cleanup-select">
+            <option value="">Select client</option>
+            <option value="liberty">Liberty</option>
+            <option value="stanlib">STANLIB</option>
+            <option value="sanlam">Sanlam</option>
+            <option value="alexforbes">AlexForbes</option>
+          </select>
+
+          <button id="processRegisterBtn" class="primary-btn cleanup-action-btn" type="button">Process Register</button>
+        </div>
+      </section>
+
+      <section class="module-card" style="margin-bottom:20px;">
+        <h3>Status</h3>
+        <div id="registerStatus">No register processed yet</div>
+      </section>
+
+      <section class="module-card" style="margin-bottom:20px;">
+        <h3>Review Guidance</h3>
+        <div class="auto-fix-content">
+          <div class="auto-fix-item">Upload a scanned register, then review the captured rows before exporting.</div>
+        </div>
+      </section>
+
+      <section class="module-card review-card">
+        <div class="section-head review-head">
+          <div>
+            <h3>Captured Data Review</h3>
+            <div id="registerSummary" class="summary-text">No rows loaded</div>
+          </div>
+
+          <button id="exportRegisterBtn" class="secondary-btn cleanup-action-btn compact-action-btn" type="button">Export Excel</button>
+        </div>
+
+        <div class="review-scroll-shell">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Surname</th>
+                  <th>ID Number / DOB</th>
+                  <th>Contact Number</th>
+                  <th>Email Address</th>
+                  <th>Gender</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="registerTableBody">
+                <tr>
+                  <td colspan="8">No captured data yet</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
   <script src="js/guard.js"></script>
   <script src="js/layout.js"></script>
+  <script src="js/register-digitisation.js?v=2"></script>
 </body>
 </html>
