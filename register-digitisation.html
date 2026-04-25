@@ -62,7 +62,7 @@
         <div class="section-head review-head">
           <div>
             <h3>Captured Data Review</h3>
-            <div id="registerSummary" class="summary-text">No rows loaded</div>
+            <div id="summaryText" class="summary-text">No rows loaded</div>
           </div>
 
           <button id="exportRegisterBtn" class="secondary-btn cleanup-action-btn compact-action-btn" type="button">Export Excel</button>
@@ -70,7 +70,7 @@
 
         <div class="review-scroll-shell">
           <div class="table-wrap">
-            <table class="data-table">
+            <table id="dataTable" class="data-table">
               <thead>
                 <tr>
                   <th>#</th>
@@ -83,7 +83,7 @@
                   <th>Status</th>
                 </tr>
               </thead>
-              <tbody id="registerTableBody">
+              <tbody id="tableBody">
                 <tr>
                   <td colspan="8">No captured data yet</td>
                 </tr>
@@ -97,6 +97,7 @@
 
   <script src="js/guard.js"></script>
   <script src="js/layout.js"></script>
-  <script src="js/register-digitisation.js?v=2"></script>
+  <script src="js/excel-cleanup.js"></script>
+  <script src="js/register-digitisation.js?v=3"></script>
 </body>
 </html>
