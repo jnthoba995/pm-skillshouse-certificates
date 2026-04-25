@@ -196,3 +196,34 @@
   background: #fee2e2;
   color: #b91c1c;
 }
+
+
+/* ===== REGISTER ROW ACTIONS - VISIBLE ===== */
+
+.row-action-cell {
+  min-width: 230px;
+  white-space: nowrap;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mini-action-btn,
+.mini-danger-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.mini-action-btn {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.mini-danger-btn {
+  background: #fee2e2;
+  color: #b91c1c;
+}

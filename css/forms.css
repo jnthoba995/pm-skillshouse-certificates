@@ -579,3 +579,42 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ===== ROW ACTION POPUP ===== */
+
+.row-action-popup {
+  position: fixed;
+  z-index: 9998;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.18);
+  padding: 8px;
+  gap: 8px;
+  align-items: center;
+}
+
+.row-action-popup button {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.row-action-popup button:hover {
+  background: #e5e7eb;
+}
+
+#popupDeleteBtn {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+#popupDeleteBtn:hover {
+  background: #fecaca;
+}

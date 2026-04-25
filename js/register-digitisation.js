@@ -9,8 +9,37 @@ document.addEventListener('DOMContentLoaded', function () {
   const processingDots = document.getElementById('registerProcessingDots')
   const cancelRowEditBtn = document.getElementById('cancelRowEditBtn')
   const saveRowEditBtn = document.getElementById('saveRowEditBtn')
+  const exportRegisterBtn = document.getElementById('exportRegisterBtn')
+  const rowActionPopup = document.getElementById('rowActionPopup')
+  const popupEditBtn = document.getElementById('popupEditBtn')
+  const popupAddBtn = document.getElementById('popupAddBtn')
+  const popupDeleteBtn = document.getElementById('popupDeleteBtn')
+  const popupSelectAllBtn = document.getElementById('popupSelectAllBtn')
+  const undoRegisterBtn = document.getElementById('undoRegisterBtn')
+  const redoRegisterBtn = document.getElementById('redoRegisterBtn')
 
   let capturedRows = []
+  let undoStack = []
+  let redoStack = []
+
+  function cloneRows(rows) {
+    return JSON.parse(JSON.stringify(rows || []))
+  }
+
+  function rememberRows() {
+    undoStack.push(cloneRows(capturedRows))
+    redoStack = []
+  }
+
+  window.rememberRows = rememberRows
+
+  function restoreRows(rows) {
+    capturedRows = cloneRows(rows)
+    window.capturedRows = capturedRows
+    renderRows()
+    const summary = document.getElementById('reviewSummary')
+    if (summary) summary.innerText = capturedRows.length + ' rows loaded for review'
+  }
 
 
   if (cancelRowEditBtn) {
@@ -24,6 +53,75 @@ document.addEventListener('DOMContentLoaded', function () {
       saveRowEdit()
     })
   }
+
+
+  if (exportRegisterBtn) {
+    exportRegisterBtn.addEventListener('click', function () {
+      exportCleanRegister()
+    })
+  }
+
+
+  if (popupEditBtn) {
+    popupEditBtn.addEventListener('click', function () {
+      if (selectedRowIndex === null) return
+      rowActionPopup.style.display = 'none'
+      openRowModal(selectedRowIndex)
+    })
+  }
+
+  if (popupAddBtn) {
+    popupAddBtn.addEventListener('click', function () {
+      if (selectedRowIndex === null) return
+      rowActionPopup.style.display = 'none'
+      addRowBelow(selectedRowIndex)
+    })
+  }
+
+  if (popupDeleteBtn) {
+    popupDeleteBtn.addEventListener('click', function () {
+      if (selectedRowIndex === null) return
+      rowActionPopup.style.display = 'none'
+      deleteRow(selectedRowIndex)
+    })
+  }
+
+  if (popupSelectAllBtn) {
+    popupSelectAllBtn.addEventListener('click', function () {
+      alert('Select All will be added in the next step.')
+    })
+  }
+
+  if (undoRegisterBtn) {
+    undoRegisterBtn.addEventListener('click', function () {
+      if (!undoStack.length) {
+        alert('Nothing to undo')
+        return
+      }
+
+      redoStack.push(cloneRows(capturedRows))
+      restoreRows(undoStack.pop())
+    })
+  }
+
+  if (redoRegisterBtn) {
+    redoRegisterBtn.addEventListener('click', function () {
+      if (!redoStack.length) {
+        alert('Nothing to redo')
+        return
+      }
+
+      undoStack.push(cloneRows(capturedRows))
+      restoreRows(redoStack.pop())
+    })
+  }
+
+  document.addEventListener('click', function (event) {
+    if (!rowActionPopup) return
+    if (event.target.closest('#rowActionPopup')) return
+    if (event.target.closest('tbody tr')) return
+    rowActionPopup.style.display = 'none'
+  })
 
   if (fileInput && fileName) {
     fileInput.addEventListener('change', function () {
@@ -50,6 +148,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         capturedRows = enrichRows(result.rows || [])
         window.capturedRows = capturedRows
+        undoStack = []
+        redoStack = []
         renderRows()
 
         if (status) status.innerText = result.message || 'Register processed. Please review highlighted fields before exporting.'
@@ -114,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const rowClass = risky ? 'row-warning' : ''
 
       return `
-        <tr class="${rowClass}" onclick="openRowModal(${index})" style="cursor:pointer;">
+        <tr class="${rowClass}" onclick="event.stopPropagation(); selectRow(${index}, event)" style="cursor:pointer;">
           <td>${index + 1}</td>
           <td contenteditable="true">${escapeHtml(row.name)}</td>
           <td contenteditable="true">${escapeHtml(row.surname)}</td>
@@ -165,6 +265,7 @@ function closeRowModal() {
 }
 
 function saveRowEdit() {
+  window.rememberRows()
   const row = window.capturedRows[currentEditIndex];
 
   row.name = document.getElementById("editName").value;
@@ -179,8 +280,7 @@ function saveRowEdit() {
   row.age = document.getElementById("editAge").value || calculateAge(row.idNumber || "");
   row.status = rowNeedsReview(row) ? "Review" : "OK";
 
-  capturedRows[currentEditIndex] = row;
-  window.capturedRows = capturedRows;
+  window.capturedRows[currentEditIndex] = row;
 
   closeRowModal();
 
@@ -244,6 +344,7 @@ function addRowBelow(index) {
     status: "Review"
   };
 
+  window.rememberRows()
   window.capturedRows.splice(index + 1, 0, newRow);
   capturedRows = window.capturedRows;
   window.renderRows();
@@ -255,6 +356,7 @@ function deleteRow(index) {
 
   if (!confirm("Delete " + label + "?")) return;
 
+  window.rememberRows()
   window.capturedRows.splice(index, 1);
   capturedRows = window.capturedRows;
   window.renderRows();
@@ -262,6 +364,14 @@ function deleteRow(index) {
 
 
 function exportCleanRegister() {
+  const clientSelect = document.getElementById("registerClient");
+  const selectedClient = clientSelect ? clientSelect.value : "";
+
+  if (!selectedClient) {
+    alert("Please select a client before exporting.");
+    return;
+  }
+
   if (!window.capturedRows || !window.capturedRows.length) {
     alert("No data to export");
     return;
@@ -269,22 +379,77 @@ function exportCleanRegister() {
 
   const rows = window.capturedRows.map(function(r) {
     return {
-      Name: r.name || "",
-      Surname: r.surname || "",
+      "Name": r.name || "",
+      "Surname": r.surname || "",
       "ID Number": r.idNumber || "",
-      Age: r.age || "",
-      Gender: r.gender || "",
-      Race: r.race || "",
-      Contact: r.contact || "",
-      Email: r.email || "N/A",
+      "Age": r.age || "",
+      "Contact Number": r.contact || "",
+      "Email": r.email || "N/A",
+      "Gender": r.gender || "",
+      "Race": r.race || "B",
       "Employment Status": r.employmentStatus || "",
       "Income Range": r.incomeRange || ""
     };
   });
 
-  const worksheet = XLSX.utils.json_to_sheet(rows);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Register");
+  const worksheet = XLSX.utils.json_to_sheet(rows, {
+    header: [
+      "Name",
+      "Surname",
+      "ID Number",
+      "Age",
+      "Contact Number",
+      "Email",
+      "Gender",
+      "Race",
+      "Employment Status",
+      "Income Range"
+    ]
+  });
 
-  XLSX.writeFile(workbook, "clean_register.xlsx");
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Clean Register");
+  const safeClient = selectedClient.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+  const today = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(workbook, safeClient + "_clean_register_" + today + ".xlsx");
 }
+
+
+let selectedRowIndex = null;
+
+function selectRow(index, event) {
+  selectedRowIndex = index;
+  renderRows();
+
+  const popup = document.getElementById("rowActionPopup");
+
+  if (popup && event) {
+    popup.style.display = "flex";
+    
+
+popup.style.left = Math.min(event.clientX, window.innerWidth - 430) + "px";
+popup.style.top = Math.min(event.clientY + 10, window.innerHeight - 80) + "px";
+popup.style.transform = "none";
+
+
+  }
+}
+
+function addRowFromTop() {
+  if (selectedRowIndex === null) {
+    alert("Select a row first");
+    return;
+  }
+  addRowBelow(selectedRowIndex);
+}
+
+function deleteRowFromTop() {
+  if (selectedRowIndex === null) {
+    alert("Select a row first");
+    return;
+  }
+  deleteRow(selectedRowIndex);
+  selectedRowIndex = null;
+}
+
+

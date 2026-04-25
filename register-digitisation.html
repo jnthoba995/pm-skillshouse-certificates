@@ -66,6 +66,8 @@
           </div>
 
           <button id="exportRegisterBtn" class="secondary-btn cleanup-action-btn compact-action-btn" type="button">Export Excel</button>
+<button id="undoRegisterBtn" class="secondary-btn cleanup-action-btn compact-action-btn" type="button">Undo</button>
+<button id="redoRegisterBtn" class="secondary-btn cleanup-action-btn compact-action-btn" type="button">Redo</button>
         </div>
 
         <div class="review-scroll-shell">
@@ -185,5 +187,14 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+
+
+<div id="rowActionPopup" class="row-action-popup" style="display:none;">
+  <button id="popupEditBtn" type="button">Edit</button>
+  <button id="popupAddBtn" type="button">+ Add Row</button>
+  <button id="popupDeleteBtn" type="button">Delete Row</button>
+  <button id="popupSelectAllBtn" type="button">Select All</button>
+</div>
 </body>
 </html>
