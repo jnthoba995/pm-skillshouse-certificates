@@ -98,5 +98,91 @@
   <script src="js/guard.js"></script>
   <script src="js/layout.js"></script>
   <script src="js/register-digitisation.js?v=5"></script>
+
+<div id="rowModal" class="row-edit-modal" style="display:none;">
+  <div class="row-edit-card">
+    <div class="row-edit-header">
+      <div>
+        <h3>Edit Captured Row</h3>
+        <p>Review and correct the captured register information.</p>
+      </div>
+    </div>
+
+    <div class="row-edit-grid">
+      <label>Name
+        <input id="editName" />
+      </label>
+
+      <label>Surname
+        <input id="editSurname" />
+      </label>
+
+      <label>ID Number / DOB
+        <input id="editIdNumber" />
+      </label>
+
+      <label>Age
+        <input id="editAge" />
+      </label>
+
+      <label>Contact Number
+        <input id="editContact" />
+      </label>
+
+      <label>Email Address
+        <input id="editEmail" />
+      </label>
+
+      <label>Gender
+        <select id="editGender">
+          <option value="">Select</option>
+          <option value="F">F</option>
+          <option value="M">M</option>
+        </select>
+      </label>
+
+      <label>Race
+        <select id="editRace">
+          <option value="B">B</option>
+          <option value="A">A</option>
+          <option value="C">C</option>
+          <option value="I">I</option>
+          <option value="W">W</option>
+        </select>
+      </label>
+
+      <label>Employment Status
+        <select id="editEmploymentStatus">
+          <option value="">Select</option>
+          <option value="Employed">Employed</option>
+          <option value="Unemployed">Unemployed</option>
+          <option value="Self-employed">Self-employed</option>
+          <option value="Student">Student</option>
+          <option value="Pensioner">Pensioner</option>
+          <option value="N/A">N/A</option>
+        </select>
+      </label>
+
+      <label>Income Range
+        <select id="editIncomeRange">
+          <option value="">Select</option>
+          <option value="R0 - R3 000">R0 - R3 000</option>
+          <option value="R3 001 - R10 000">R3 001 - R10 000</option>
+          <option value="R10 001 - R15 000">R10 001 - R15 000</option>
+          <option value="R15 001 - R20 834">R15 001 - R20 834</option>
+          <option value="R20 834+">R20 834+</option>
+          <option value="N/A">N/A</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="row-edit-actions">
+      <button id="cancelRowEditBtn" class="secondary-btn" type="button">Cancel</button>
+      <button id="saveRowEditBtn" class="primary-btn" type="button">Save Row</button>
+    </div>
+  </div>
+</div>
+</div>
+
 </body>
 </html>

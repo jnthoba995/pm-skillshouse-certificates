@@ -461,3 +461,121 @@ body {
   color: #6b7280;
   margin-top: 6px;
 }
+
+
+/* ===== REGISTER PROCESSING INDICATOR ===== */
+
+.register-processing-dots {
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.register-processing-dots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #fb8c00;
+  display: inline-block;
+  animation: registerPulse 1s infinite ease-in-out;
+}
+
+.register-processing-dots span:nth-child(2) { animation-delay: 0.1s; }
+.register-processing-dots span:nth-child(3) { animation-delay: 0.2s; }
+.register-processing-dots span:nth-child(4) { animation-delay: 0.3s; }
+.register-processing-dots span:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes registerPulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: translateY(0) scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.08);
+  }
+}
+
+
+/* ===== ROW EDIT MODAL ===== */
+
+.row-edit-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.48);
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 24px;
+}
+
+.row-edit-card {
+  width: 760px;
+  max-width: 96%;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.28);
+}
+
+.row-edit-header h3 {
+  margin: 0;
+  font-size: 22px;
+  color: #111827;
+}
+
+.row-edit-header p {
+  margin: 6px 0 22px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.row-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.row-edit-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 700;
+  color: #374151;
+  font-size: 14px;
+}
+
+.row-edit-grid input,
+.row-edit-grid select {
+  height: 48px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 0 14px;
+  font-size: 15px;
+  color: #111827;
+  background: #f9fafb;
+}
+
+.row-edit-grid input:focus {
+  outline: none;
+  border-color: #fb8c00;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(251, 140, 0, 0.12);
+}
+
+.row-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+@media (max-width: 720px) {
+  .row-edit-card {
+    padding: 22px;
+  }
+
+  .row-edit-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -91,6 +91,15 @@ function extractRowsFromDocumentAI(docai) {
 
         if (!name && !surname && !idNumber) return;
 
+        const joinedValue = values.join(" ").toLowerCase();
+        if (
+          joinedValue.includes("assupol collects") ||
+          joinedValue.includes("personal information") ||
+          joinedValue.includes("privacy") ||
+          joinedValue.includes("reporting and auditing") ||
+          joinedValue.includes("consent to assupol")
+        ) return;
+
         rows.push({
           name,
           surname,

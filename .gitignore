@@ -1,2 +1,8 @@
 .vercel
 .env*.local
+
+node_modules/
+secrets/
+*.bak_*
+*.broken_*
+*.old_broken_*
