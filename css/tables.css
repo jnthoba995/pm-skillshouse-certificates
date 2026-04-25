@@ -158,3 +158,11 @@
 .data-table tbody tr.row-risk td:first-child {
   border-left: 4px solid #dc2626;
 }
+
+
+/* ===== RISK ROWS ===== */
+
+.row-warning {
+  background: rgba(239, 68, 68, 0.05);
+  border-left: 4px solid #ef4444;
+}

@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
       ]
 
       renderRows()
-      if (status) status.innerText = 'Sample capture loaded. OCR extraction connection comes next.'
+      if (status) status.innerText = 'Register processed. Please review highlighted fields before exporting.'
       if (summary) summary.innerText = capturedRows.length + ' rows loaded for review'
     })
   }
