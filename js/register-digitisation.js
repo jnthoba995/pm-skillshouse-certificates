@@ -259,3 +259,32 @@ function deleteRow(index) {
   capturedRows = window.capturedRows;
   window.renderRows();
 }
+
+
+function exportCleanRegister() {
+  if (!window.capturedRows || !window.capturedRows.length) {
+    alert("No data to export");
+    return;
+  }
+
+  const rows = window.capturedRows.map(function(r) {
+    return {
+      Name: r.name || "",
+      Surname: r.surname || "",
+      "ID Number": r.idNumber || "",
+      Age: r.age || "",
+      Gender: r.gender || "",
+      Race: r.race || "",
+      Contact: r.contact || "",
+      Email: r.email || "N/A",
+      "Employment Status": r.employmentStatus || "",
+      "Income Range": r.incomeRange || ""
+    };
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Register");
+
+  XLSX.writeFile(workbook, "clean_register.xlsx");
+}
