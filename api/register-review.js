@@ -1,5 +1,3 @@
-import fs from "fs";
-import path from "path";
 import { GoogleAuth } from "google-auth-library";
 
 export default async function handler(req, res) {
@@ -14,8 +12,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "No document provided" });
     }
 
-    const keyPath = path.join(process.cwd(), "secrets", "docai-key.json");
-    const key = JSON.parse(fs.readFileSync(keyPath, "utf8"));
+    const key = JSON.parse(process.env.GOOGLE_DOC_AI_KEY);
 
     const auth = new GoogleAuth({
       credentials: key,
