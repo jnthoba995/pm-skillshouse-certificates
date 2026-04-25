@@ -3,10 +3,150 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Excel to PDF</title>
-  <link rel="stylesheet" href="css/base.css" />
-  <link rel="stylesheet" href="css/layout.css" />
-  <link rel="stylesheet" href="css/dashboard.css" />
+  <title>Certificate Generator</title>
+
+  <link rel="stylesheet" href="css/base.css?v=11" />
+  <link rel="stylesheet" href="css/layout.css?v=11" />
+  <link rel="stylesheet" href="css/modules.css?v=11" />
+  <link rel="stylesheet" href="css/forms.css?v=11" />
+  <link rel="stylesheet" href="css/tables.css?v=11" />
+
+  <style>
+    .certificate-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .certificate-client-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      padding: 18px;
+      background: #ffffff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .certificate-client-card.active {
+      border-color: #f97316;
+      background: #fff7ed;
+      box-shadow: 0 12px 28px rgba(249, 115, 22, 0.14);
+    }
+
+    .certificate-client-card.pending {
+      background: #fffbeb;
+      border-color: #fde68a;
+    }
+
+    .certificate-client-card.disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      background: #f8fafc;
+    }
+
+    .certificate-client-name {
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 6px;
+    }
+
+    .certificate-client-sub {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .certificate-steps {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .certificate-step {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .certificate-step strong {
+      display: block;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+
+    .certificate-step span {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .certificate-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .certificate-delivery {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .certificate-delivery-option {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      background: #ffffff;
+    }
+
+    .certificate-delivery-option input {
+      width: auto;
+      margin-top: 3px;
+      accent-color: #f97316;
+      transform: scale(1.1);
+    }
+
+    .certificate-badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: #ffedd5;
+      color: #c2410c;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .certificate-note {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid #fed7aa;
+      background: #fff7ed;
+      color: #9a3412;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .preview-list {
+      margin-top: 10px;
+      padding-left: 20px;
+      color: #374151;
+    }
+
+    @media (max-width: 900px) {
+      .certificate-grid,
+      .certificate-actions,
+      .certificate-steps {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
   <div id="appHeader"></div>
@@ -15,15 +155,142 @@
     <div id="appSidebar"></div>
 
     <main class="app-main">
-      <div class="page-title">Excel to PDF</div>
-      <div class="card">
-        <div class="card-title">Module Status</div>
-        <div class="card-value">Shell Ready</div>
+      <div class="page-title">Certificate Generator</div>
+
+      <div class="certificate-steps">
+        <div class="certificate-step"><strong>1. Template</strong><span>Choose the client certificate.</span></div>
+        <div class="certificate-step"><strong>2. Excel</strong><span>Upload participant data.</span></div>
+        <div class="certificate-step"><strong>3. Preview</strong><span>Check the first certificate.</span></div>
+        <div class="certificate-step"><strong>4. Generate</strong><span>Download print-ready files.</span></div>
       </div>
+
+      <section class="module-card" style="margin-bottom:20px;">
+        <div class="section-head">
+          <div>
+            <h3>Select Client / Certificate Template</h3>
+            <div class="summary-text">Each client can have its own certificate design and positioning rules.</div>
+          </div>
+        </div>
+
+        <div class="certificate-grid">
+          <div class="certificate-client-card pending" data-client="pm">
+            <div class="certificate-client-name">PM Skillshouse</div>
+            <div class="certificate-client-sub">Template setup pending</div>
+          </div>
+
+          <div class="certificate-client-card active" data-client="liberty">
+            <div class="certificate-client-name">Liberty</div>
+            <div class="certificate-client-sub">Active template</div>
+          </div>
+
+          <div class="certificate-client-card" data-client="stanlib">
+            <div class="certificate-client-name">STANLIB</div>
+            <div class="certificate-client-sub">Active template</div>
+          </div>
+
+          <div class="certificate-client-card pending" data-client="alexforbes">
+            <div class="certificate-client-name">AlexForbes</div>
+            <div class="certificate-client-sub">Template setup pending</div>
+          </div>
+
+          <div class="certificate-client-card disabled" data-client="sanlam">
+            <div class="certificate-client-name">Sanlam</div>
+            <div class="certificate-client-sub">Coming Soon</div>
+          </div>
+        </div>
+
+        <div id="templateNote" class="certificate-note">Liberty template selected.</div>
+      </section>
+
+      <section class="module-card" style="margin-bottom:20px;">
+        <div class="section-head">
+          <div>
+            <h3>Certificate Details</h3>
+            <div class="summary-text">Upload the Excel list and enter the date that must appear on the certificates.</div>
+          </div>
+        </div>
+
+        <div class="cleanup-row cleanup-file-row">
+          <div class="cleanup-file-wrap">
+            <input id="excelFile" type="file" accept=".xlsx,.xls" />
+            <span id="excelFileName" class="cleanup-file-name">No file chosen</span>
+          </div>
+
+          <input id="certificateDate" class="sheet-select cleanup-select" type="date" />
+        </div>
+
+        <div class="certificate-actions">
+          <button id="previewBtn" class="secondary-btn cleanup-action-btn" type="button">Preview First Certificate</button>
+          <button id="generateBtn" class="primary-btn cleanup-action-btn" type="button">Process Certificates</button>
+        </div>
+      </section>
+
+      <section class="module-card" style="margin-bottom:20px;">
+        <h3>Status</h3>
+        <div id="statusText">No certificate file prepared yet</div>
+      </section>
+
+      <section id="previewBox" class="module-card" style="display:none; margin-bottom:20px;">
+        <h3>Preview Summary</h3>
+        <div id="previewCount" class="summary-text" style="margin-top:8px;"></div>
+        <ol id="previewList" class="preview-list"></ol>
+      </section>
+
+      <div id="certificatePreviewModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.62); z-index:9999; align-items:center; justify-content:center; padding:24px;">
+        <div style="width:min(1100px,96vw); height:min(760px,92vh); background:#fff; border-radius:24px; overflow:hidden; box-shadow:0 30px 80px rgba(15,23,42,0.35); display:flex; flex-direction:column;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:1px solid #e5e7eb;">
+            <div>
+              <strong style="font-size:18px;">Certificate Preview</strong>
+              <div class="summary-text">Review the first certificate before generating all certificates.</div>
+            </div>
+            <button id="closeCertificatePreviewBtn" type="button" style="width:auto; padding:10px 16px; border-radius:14px; background:#0f172a; color:#fff;">Close</button>
+          </div>
+          <iframe id="certificatePreviewFrame" style="width:100%; height:100%; border:0; background:#f8fafc;"></iframe>
+        </div>
+      </div>
+
+      <section class="module-card">
+        <h3>Delivery Options</h3>
+        <div class="summary-text">Choose one or more ways to prepare and deliver the certificates.</div>
+
+        <div class="certificate-delivery">
+          <label class="certificate-delivery-option">
+            <input id="deliveryMerged" type="checkbox" checked />
+            <div>
+              <strong>Download merged PDF</strong>
+              <div class="summary-text">One print-ready file for all participants.</div>
+            </div>
+          </label>
+
+          <label class="certificate-delivery-option">
+            <input id="deliverySeparate" type="checkbox" />
+            <div>
+              <strong>Download separate PDFs</strong>
+              <div class="summary-text">One PDF per participant in a ZIP folder.</div>
+            </div>
+          </label>
+
+          <label class="certificate-delivery-option" style="background:#f8fafc; opacity:0.8;">
+            <input id="deliveryEmail" type="checkbox" disabled />
+            <div>
+              <strong>Send by email <span class="certificate-badge">Coming Soon</span></strong>
+              <div class="summary-text">Send each participant their own certificate directly as an optional add-on.</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="certificate-note">
+          <strong>Email delivery add-on:</strong> This feature is kept visible for future rollout and proposal costing. It requires verified email sending setup and domain configuration before it can be activated.
+        </div>
+      </section>
     </main>
   </div>
 
   <script src="js/guard.js"></script>
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="js/layout.js"></script>
+  <script src="js/excel-to-pdf.js?v=20"></script>
 </body>
 </html>
