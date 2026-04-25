@@ -44,13 +44,18 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   async function requestRegisterReview(file) {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('client', clientSelect ? clientSelect.value : '')
+    const fileBase64 = await fileToBase64(file)
 
     const response = await fetch('/api/register-review', {
       method: 'POST',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        fileBase64: fileBase64,
+        mimeType: file.type || 'application/pdf',
+        client: clientSelect ? clientSelect.value : ''
+      })
     })
 
     if (!response.ok) {
@@ -58,6 +63,20 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     return response.json()
+  }
+
+  function fileToBase64(file) {
+    return new Promise(function(resolve, reject) {
+      const reader = new FileReader()
+
+      reader.onload = function() {
+        const result = String(reader.result || '')
+        resolve(result.split(',')[1] || '')
+      }
+
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
   }
 
   function renderRows() {
