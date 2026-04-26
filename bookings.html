@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bookings</title>
+
+  <link rel="stylesheet" href="css/base.css?v=12" />
+  <link rel="stylesheet" href="css/layout.css?v=12" />
+  <link rel="stylesheet" href="css/modules.css?v=12" />
+  <link rel="stylesheet" href="css/forms.css?v=12" />
+  <link rel="stylesheet" href="css/tables.css?v=12" />
+
+  <style>
+    .booking-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .booking-kpi {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 12px 30px rgba(15,23,42,0.06);
+    }
+
+    .booking-kpi-label {
+      color: #6b7280;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .booking-kpi-value {
+      font-size: 28px;
+      font-weight: 900;
+      color: #111827;
+    }
+
+    .booking-toolbar {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr auto;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .booking-status-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .status-pending { background:#fff7ed; color:#c2410c; }
+    .status-approved { background:#ecfdf5; color:#047857; }
+    .status-allocated { background:#eff6ff; color:#1d4ed8; }
+    .status-declined { background:#fef2f2; color:#b91c1c; }
+    .status-completed { background:#f3f4f6; color:#374151; }
+
+    .booking-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .booking-table-shell {
+      overflow-x:auto;
+    }
+
+    .booking-table-shell table {
+      min-width: 1180px;
+      table-layout: fixed;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .booking-table-shell th,
+    .booking-table-shell td {
+      white-space: normal;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      vertical-align: top;
+      line-height: 1.35;
+      max-width: 1px;
+    }
+
+    .booking-table-shell th:nth-child(1),
+    .booking-table-shell td:nth-child(1) { width: 145px; }
+
+    .booking-table-shell th:nth-child(2),
+    .booking-table-shell td:nth-child(2) { width: 90px; }
+
+    .booking-table-shell th:nth-child(3),
+    .booking-table-shell td:nth-child(3) { width: 120px; }
+
+    .booking-table-shell th:nth-child(4),
+    .booking-table-shell td:nth-child(4) { width: 180px; }
+
+    .booking-table-shell th:nth-child(5),
+    .booking-table-shell td:nth-child(5) { width: 360px; }
+
+    .booking-table-shell th:nth-child(6),
+    .booking-table-shell td:nth-child(6) { width: 150px; }
+
+    .booking-table-shell th:nth-child(7),
+    .booking-table-shell td:nth-child(7) { width: 130px; }
+
+    .booking-table-shell th:nth-child(8),
+    .booking-table-shell td:nth-child(8) { width: 110px; }
+
+    .mini-dark-btn,
+    .mini-soft-btn {
+      width: auto;
+      border-radius: 12px;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .mini-dark-btn {
+      background:#0f172a;
+      color:#fff;
+      border:0;
+    }
+
+    .mini-soft-btn {
+      background:#fff7ed;
+      color:#c2410c;
+      border:1px solid #fed7aa;
+    }
+
+    .booking-modal {
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,0.62);
+      z-index:9999;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .booking-modal-card {
+      width:min(980px,96vw);
+      max-height:92vh;
+      overflow:auto;
+      background:#fff;
+      border-radius:24px;
+      box-shadow:0 30px 80px rgba(15,23,42,0.35);
+      padding:26px;
+    }
+
+    .booking-detail-grid {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+      margin-top:18px;
+    }
+
+    .booking-detail-box {
+      border:1px solid #e5e7eb;
+      background:#f8fafc;
+      border-radius:16px;
+      padding:14px;
+    }
+
+    .booking-detail-box span {
+      display:block;
+      color:#6b7280;
+      font-size:12px;
+      margin-bottom:5px;
+      font-weight:700;
+    }
+
+    .booking-detail-box strong {
+      color:#111827;
+      font-size:14px;
+    }
+
+    @media (max-width: 900px) {
+      .booking-kpi-grid,
+      .booking-toolbar,
+      .booking-detail-grid {
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="appHeader"></div>
+
+  <div class="shell">
+    <div id="appSidebar"></div>
+
+    <main class="app-main">
+      <div class="page-title">Admin Bookings</div>
+
+      <div class="booking-kpi-grid">
+        <div class="booking-kpi">
+          <div class="booking-kpi-label">Pending requests</div>
+          <div class="booking-kpi-value" id="pendingCount">0</div>
+        </div>
+        <div class="booking-kpi">
+          <div class="booking-kpi-label">Approved</div>
+          <div class="booking-kpi-value" id="approvedCount">0</div>
+        </div>
+        <div class="booking-kpi">
+          <div class="booking-kpi-label">Allocated</div>
+          <div class="booking-kpi-value" id="allocatedCount">0</div>
+        </div>
+        <div class="booking-kpi">
+          <div class="booking-kpi-label">Completed</div>
+          <div class="booking-kpi-value" id="completedCount">0</div>
+        </div>
+      </div>
+
+      <section class="module-card" style="margin-bottom:20px;">
+        <div class="section-head">
+          <div>
+            <h3>Booking Control Centre</h3>
+            <div class="summary-text">Review facilitator requests, imported client bookings, allocations, and session readiness.</div>
+          </div>
+        </div>
+
+        <div class="booking-toolbar">
+          <input id="bookingSearch" class="sheet-select cleanup-select" type="text" placeholder="Search client, facilitator, venue, province..." />
+
+          <select id="bookingStatusFilter" class="sheet-select cleanup-select">
+            <option value="">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="allocated">Allocated</option>
+            <option value="declined">Declined</option>
+            <option value="completed">Completed</option>
+          </select>
+
+          <select id="bookingSourceFilter" class="sheet-select cleanup-select">
+            <option value="">All sources</option>
+            <option value="client_excel">Client Excel</option>
+            <option value="facilitator_request">Facilitator Request</option>
+          </select>
+
+          <div style="display:flex; gap:10px;">
+            <input id="bookingImportFile" type="file" accept=".xlsx,.xls" style="display:none;" />
+            <button id="importBookingBtn" class="primary-btn cleanup-action-btn compact-action-btn" type="button">Import Client Excel</button>
+            <button id="newBookingBtn" class="primary-btn cleanup-action-btn compact-action-btn" type="button">+ New Booking</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="module-card review-card">
+        <div class="section-head review-head">
+          <div>
+            <h3>Bookings</h3>
+            <div id="bookingSummary" class="summary-text">Sample bookings loaded for structure review.</div>
+          </div>
+        </div>
+
+        <div class="review-scroll-shell">
+          <div class="table-wrap booking-table-shell">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Client</th>
+                  <th>Facilitator</th>
+                  <th>Company / Community</th>
+                  <th>Province</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="bookingTableBody">
+                <tr>
+                  <td colspan="8">No bookings loaded yet. Import a client Excel file to begin.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="bookingModal" class="booking-modal">
+    <div class="booking-modal-card">
+      <div class="section-head">
+        <div>
+          <h3 id="modalTitle">Booking Details</h3>
+          <div id="modalSubtitle" class="summary-text">Review booking before approval or allocation.</div>
+        </div>
+        <button id="closeBookingModalBtn" class="mini-dark-btn" type="button">Close</button>
+      </div>
+
+      <div id="bookingDetailGrid" class="booking-detail-grid"></div>
+
+      <div style="margin-top:20px;" class="certificate-note">
+        <strong>WhatsApp summary:</strong>
+        <div id="whatsappPreview" style="white-space:pre-wrap; margin-top:8px;"></div>
+      </div>
+
+      <div class="booking-actions" style="margin-top:20px;">
+        <button id="copyWhatsappBtn" class="mini-soft-btn" type="button">Copy WhatsApp Message</button>
+        <button id="approveBookingBtn" class="mini-dark-btn" type="button">Approve</button>
+        <button id="allocateBookingBtn" class="mini-dark-btn" type="button">Allocate</button>
+        <button id="declineBookingBtn" class="mini-soft-btn" type="button">Decline</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/guard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/bookings.js?v=2"></script>
+</body>
+</html>
+
+<style>
+  .booking-table-shell td:nth-child(5),
+  .booking-table-shell th:nth-child(5),
+  .booking-table-shell td:nth-child(6),
+  .booking-table-shell th:nth-child(6) {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+    line-height: 1.35 !important;
+  }
+
+  .booking-table-shell td:nth-child(5) {
+    max-width: 360px !important;
+    width: 360px !important;
+  }
+
+  .booking-table-shell td:nth-child(6) {
+    max-width: 150px !important;
+    width: 150px !important;
+  }
+</style>
