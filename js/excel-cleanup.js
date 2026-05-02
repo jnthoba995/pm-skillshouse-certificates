@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const sourceSheets = Array.from(new Set(exportSourceRows.map(row => row['Source Sheet']).filter(Boolean)))
 
-    const sheetsToExport = sourceSheets.length ? sourceSheets : [currentSheetName || 'Cleaned Data']
+    const sheetsToExport = sourceSheets.length ? sourceSheets : [currentSheetName || 'Review Data']
 
     sheetsToExport.forEach(sheetName => {
       const rowsForSheet = activeRows.filter(row => {
@@ -189,14 +189,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const cleaned = rowsForSheet.map(row => {
         const copy = {}
+
+        copy['Real Excel Row'] = row['Real Excel Row'] || ''
+        copy['Source Sheet'] = row['Source Sheet'] || ''
+        copy['Duplicate Group'] = row.duplicateInvestigationGroup || ''
+        copy['Duplicate Reason'] = (row.duplicateInvestigationReasons || []).join(' + ')
+        copy['Review Status'] = row.keepChoice ? 'Marked for review' : ''
+
         sheetHeaders.forEach(h => {
-          if (h === 'Source Sheet' && sourceSheets.length === 1) return
+          if (h === 'Real Excel Row') return
+          if (h === 'Source Sheet') return
           copy[h] = row[h] || ''
         })
+
         return copy
       })
 
-      const safeSheetName = String(sheetName || 'Cleaned Data').replace(/[\\\/\?\*\[\]\:]/g, ' ').slice(0, 31) || 'Cleaned Data'
+      const safeSheetName = String(sheetName || 'Review Data').replace(/[\\\/\?\*\[\]\:]/g, ' ').slice(0, 31) || 'Review Data'
       const cleanedWs = XLSX.utils.json_to_sheet(cleaned)
       XLSX.utils.book_append_sheet(wb, cleanedWs, safeSheetName)
     })
@@ -217,22 +226,22 @@ document.addEventListener('DOMContentLoaded', () => {
       { Metric: 'Workbook Sheet', Value: currentSheetName || 'Cleaned' },
       { Metric: 'Tabs Exported', Value: sheetsToExport.length },
       { Metric: 'Original Rows', Value: exportSourceRows.length },
-      { Metric: 'Cleaned Rows Exported', Value: activeRows.length },
+      { Metric: 'Review Rows Exported', Value: activeRows.length },
       { Metric: 'Rows Marked for Review', Value: removedRows.length },
-      { Metric: 'Rule Used', Value: activeRule === 'training_register' ? 'Training Register (Sessions)' : 'Generic workbook' },
+      { Metric: 'Review Type', Value: 'Duplicate investigation review' },
       { Metric: 'Duplicate View Used', Value: duplicateViewMode },
       { Metric: 'Export Date', Value: new Date().toLocaleString() }
     ]
 
     const summaryWs = XLSX.utils.json_to_sheet(summary)
-    XLSX.utils.book_append_sheet(wb, summaryWs, 'Cleanup Summary')
+    XLSX.utils.book_append_sheet(wb, summaryWs, 'Review Summary')
 
     if (removed.length) {
       const removedWs = XLSX.utils.json_to_sheet(removed)
       XLSX.utils.book_append_sheet(wb, removedWs, 'Review List')
     }
 
-    const fileName = `cleaned-${slugify(currentSheetName || 'workbook')}-${dateStamp()}.xlsx`
+    const fileName = `review-${slugify(currentSheetName || 'workbook')}-${dateStamp()}.xlsx`
     XLSX.writeFile(wb, fileName)
 
     statusText.innerText = `Review export ready: ${activeRows.length} rows exported across ${sheetsToExport.length} tab(s).`
