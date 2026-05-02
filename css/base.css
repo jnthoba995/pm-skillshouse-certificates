@@ -24,3 +24,48 @@ select,
 textarea {
   font: inherit;
 }
+
+/* ===== GLOBAL BUTTON CLICK FEEDBACK ===== */
+button {
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease, background-color .12s ease;
+}
+
+button:active,
+button.button-clicked {
+  transform: translateY(1px) scale(.98);
+  box-shadow: inset 0 0 0 999px rgba(0,0,0,.10);
+}
+
+button.button-clicked {
+  outline: 3px solid rgba(249,115,22,.30);
+}
+
+button.is-processing {
+  opacity: .72;
+  pointer-events: none;
+}
+
+
+
+.status-progress {
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.status-progress-bar {
+  width: 30%;
+  height: 100%;
+  background: linear-gradient(90deg, #f97316, #fb923c);
+  border-radius: 999px;
+  animation: progressSlide 1.2s infinite ease-in-out;
+}
+
+@keyframes progressSlide {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(120%); }
+  100% { transform: translateX(200%); }
+}

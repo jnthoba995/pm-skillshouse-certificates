@@ -45,6 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     statusText.innerText = 'Reading workbook...'
+const bar = document.getElementById('statusProgressBar')
+if (bar) bar.style.display = 'block'
     
     summaryText.innerText = 'Loading workbook...'
     tableBody.innerHTML = ''
