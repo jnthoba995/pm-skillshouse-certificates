@@ -54,6 +54,7 @@ button.is-processing {
   border-radius: 999px;
   overflow: hidden;
   margin-top: 10px;
+  display: none;
 }
 
 .status-progress-bar {

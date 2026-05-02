@@ -45,8 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     statusText.innerText = 'Reading workbook...'
-const bar = document.getElementById('statusProgressBar')
-if (bar) bar.style.display = 'block'
+const barWrap = document.querySelector('.status-progress')
+if (barWrap) barWrap.style.display = 'block'
     
     summaryText.innerText = 'Loading workbook...'
     tableBody.innerHTML = ''
@@ -71,11 +71,15 @@ if (bar) bar.style.display = 'block'
       }
 
       statusText.innerText = 'Workbook loaded.'
+const barWrapDone = document.querySelector('.status-progress')
+if (barWrapDone) barWrapDone.style.display = 'none'
       
     }
 
     reader.onerror = () => {
       statusText.innerText = 'Could not read workbook.'
+const barWrapError = document.querySelector('.status-progress')
+if (barWrapError) barWrapError.style.display = 'none'
       
     }
 
