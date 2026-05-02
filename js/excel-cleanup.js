@@ -129,19 +129,25 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 
 
-  ruleSelect.addEventListener('change', () => {
-    if (currentSheetName) loadSheet(currentSheetName)
-  })
+  if (ruleSelect) {
+    ruleSelect.addEventListener('change', () => {
+      if (currentSheetName) loadSheet(currentSheetName)
+    })
+  }
 
-  duplicatesOnlyToggle.addEventListener('change', () => {
-    renderTable()
-    updateSummary()
-    updateAutoFixSuggestions()
-  })
+  if (duplicatesOnlyToggle) {
+    duplicatesOnlyToggle.addEventListener('change', () => {
+      renderTable()
+      updateSummary()
+      updateAutoFixSuggestions()
+    })
+  }
 
-  hideRemovedToggle.addEventListener('change', () => {
-    renderTable()
-  })
+  if (hideRemovedToggle) {
+    hideRemovedToggle.addEventListener('change', () => {
+      renderTable()
+    })
+  }
 
   if (riskOnlyToggle) {
     riskOnlyToggle.addEventListener('change', () => {
@@ -150,11 +156,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // continue
-  hideRemovedToggle.addEventListener('change', () => {
-    renderTable()
-    updateSummary()
-    updateAutoFixSuggestions()
-  })
+  if (hideRemovedToggle) {
+    hideRemovedToggle.addEventListener('change', () => {
+      renderTable()
+      updateSummary()
+      updateAutoFixSuggestions()
+    })
+  }
 
   exportBtn.addEventListener('click', () => {
     if (!workingRows.length) {
