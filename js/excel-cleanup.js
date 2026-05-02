@@ -1712,7 +1712,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function getVisibleRows() {
     let rows = workingRows.slice()
 
-    if (duplicatesOnlyToggle.checked) {
+    if (duplicatesOnlyToggle && duplicatesOnlyToggle.checked) {
       rows = rows.filter(r => r.isDuplicate)
     }
 
@@ -1730,7 +1730,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })
     }
 
-    if (hideRemovedToggle.checked) {
+    if (hideRemovedToggle && hideRemovedToggle.checked) {
 
       rows = rows.filter(r => r.rowState !== 'removed')
     }
