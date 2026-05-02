@@ -937,6 +937,33 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
+
+  function keepOnlyCompleteInvestigationGroups(rows) {
+    const groups = {}
+
+    rows.forEach(row => {
+      const group = row.duplicateInvestigationGroup || ''
+      if (!group) return
+      if (!groups[group]) groups[group] = []
+      groups[group].push(row)
+    })
+
+    return rows
+      .filter(row => {
+        const group = row.duplicateInvestigationGroup || ''
+        return group && groups[group] && groups[group].length > 1
+      })
+      .sort((a, b) => {
+        const ag = a.duplicateInvestigationGroup || ''
+        const bg = b.duplicateInvestigationGroup || ''
+        if (ag !== bg) return ag.localeCompare(bg)
+
+        const ar = Number(a['Original Excel Row'] || 0)
+        const br = Number(b['Original Excel Row'] || 0)
+        return ar - br
+      })
+  }
+
   function applyDuplicateInvestigationFilters() {
     const status = document.getElementById('duplicateInvestigationStatus')
 
@@ -980,6 +1007,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (primaryFiltersActive && supportFiltersActive && !rows.length) {
       rows = duplicateInvestigationBaseRows.filter(row => row.duplicateInvestigationActive)
     }
+
+    rows = keepOnlyCompleteInvestigationGroups(rows)
 
     workingRows = rows
 
