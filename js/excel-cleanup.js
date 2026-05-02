@@ -208,7 +208,8 @@ if (barWrapError) barWrapError.style.display = 'none'
         copy['Source Sheet'] = row['Source Sheet'] || ''
         copy['Duplicate Group'] = row.duplicateInvestigationGroup || ''
         copy['Duplicate Reason'] = (row.duplicateInvestigationReasons || []).join(' + ')
-        copy['Review Status'] = row.keepChoice ? 'Marked for review' : ''
+        copy['Review Decision'] = row.reviewDecision || ''
+        copy['Review Status'] = row.reviewDecision || (row.keepChoice ? 'Marked for review' : '')
 
         sheetHeaders.forEach(h => {
           if (h === 'Real Excel Row') return
@@ -1867,26 +1868,30 @@ if (barWrapError) barWrapError.style.display = 'none'
   }
 
   function getActionsHtml(row) {
-    if (row.rowState === 'removed') {
+    const decision = row.reviewDecision || ''
+
+    if (decision === 'Keep') {
       return `
         <div class="row-actions">
-          <button class="row-btn keep" data-action="restore" data-id="${row._id}">Restore</button>
+          <button class="row-btn keep" data-action="group-keep" data-id="${row._id}">Keep selected</button>
+          <span class="status-pill status-kept">Keep</span>
         </div>
       `
     }
 
-    if (row.isDuplicate) {
+    if (decision === 'Duplicate') {
       return `
         <div class="row-actions">
-          <button class="row-btn keep" data-action="keep" data-id="${row._id}">Keep</button>
-          <button class="row-btn remove" data-action="remove" data-id="${row._id}">Mark for Review</button>
+          <button class="row-btn keep" data-action="group-keep" data-id="${row._id}">Keep this instead</button>
+          <span class="status-pill status-removed">Duplicate</span>
         </div>
       `
     }
 
     return `
       <div class="row-actions">
-        <button class="row-btn remove" data-action="remove" data-id="${row._id}">Mark for Review</button>
+        <button class="row-btn keep" data-action="group-keep" data-id="${row._id}">Keep this</button>
+        <span class="status-pill">Review</span>
       </div>
     `
   }
@@ -1898,6 +1903,28 @@ if (barWrapError) barWrapError.style.display = 'none'
         const id = btn.dataset.id
         const row = workingRows.find(r => r._id === id)
         if (!row) return
+
+        if (action === 'group-keep') {
+          const group = row.duplicateInvestigationGroup || row._duplicateKey || ''
+
+          workingRows.forEach(r => {
+            const sameGroup = group && ((r.duplicateInvestigationGroup || r._duplicateKey || '') === group)
+            if (!sameGroup) return
+            r.reviewDecision = r._id === row._id ? 'Keep' : 'Duplicate'
+            r.keepChoice = r._id === row._id
+            r.rowState = 'active'
+          })
+
+          if (!group) {
+            row.reviewDecision = 'Keep'
+            row.keepChoice = true
+            row.rowState = 'active'
+          }
+
+          renderTable()
+          updateSummary()
+          return
+        }
 
         if (action === 'remove') {
           row.rowState = 'active'
