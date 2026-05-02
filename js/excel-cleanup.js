@@ -365,11 +365,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const rows = dataRows
       .map((row, rowIndex) => {
+        const realExcelRow = headerRowIndex + rowIndex + 2
         const obj = {
           _id: `${sheetName}-${rowIndex + 1}`,
           rowState: 'active',
           headers: headers.slice(),
           sheetHeaders: headers.slice(),
+          'Real Excel Row': realExcelRow,
+          'Original Excel Row': realExcelRow,
           'Source Sheet': sheetName
         }
 
