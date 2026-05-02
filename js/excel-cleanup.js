@@ -1290,7 +1290,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getHeadersForAllTabs(rows) {
-    const headers = ['Source Sheet']
+    const headers = ['Real Excel Row', 'Source Sheet']
 
     rows.forEach(row => {
       const sourceHeaders = Array.isArray(row.sheetHeaders) && row.sheetHeaders.length
@@ -1341,7 +1341,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentSheetName = 'All Workbook Tabs'
 
     let allRows = []
-    let allHeaders = ['Source Sheet']
+    let allHeaders = ['Real Excel Row', 'Source Sheet']
 
     workbookMeta.sheetNames.forEach(sheetName => {
       const result = rowsFromWorksheet(sheetName)
