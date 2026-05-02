@@ -958,8 +958,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const bg = b.duplicateInvestigationGroup || ''
         if (ag !== bg) return ag.localeCompare(bg)
 
-        const ar = Number(a['Original Excel Row'] || 0)
-        const br = Number(b['Original Excel Row'] || 0)
+        const ar = Number(a['Real Excel Row'] || a['Original Excel Row'] || 0)
+        const br = Number(b['Real Excel Row'] || b['Original Excel Row'] || 0)
         return ar - br
       })
   }
