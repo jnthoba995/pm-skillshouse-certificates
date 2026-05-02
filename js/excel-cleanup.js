@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   saveDraftBtn.addEventListener('click', () => {
     if (!workingRows.length) {
-      statusText.innerText = 'No cleanup session available to save yet.'
+      statusText.innerText = 'No review session available to save yet.'
       return
     }
 
@@ -99,14 +99,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     localStorage.setItem('pm_cleanup_draft', JSON.stringify(payload))
-    statusText.innerText = `Draft saved at ${new Date(payload.savedAt).toLocaleString()}.`
+    statusText.innerText = `Review session saved at ${new Date(payload.savedAt).toLocaleString()}.`
   })
 
   restoreDraftBtn.addEventListener('click', () => {
     const saved = localStorage.getItem('pm_cleanup_draft')
 
     if (!saved) {
-      statusText.innerText = 'No saved cleanup draft found.'
+      statusText.innerText = 'No saved review session found.'
       return
     }
 
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSummary()
     updateAutoFixSuggestions()
 
-    statusText.innerText = `Draft restored from ${new Date(payload.savedAt).toLocaleString()}.`
+    statusText.innerText = `Review session restored from ${new Date(payload.savedAt).toLocaleString()}.`
   })
 
 
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   exportBtn.addEventListener('click', () => {
     if (!workingRows.length) {
-      statusText.innerText = 'No cleaned rows available to export yet.'
+      statusText.innerText = 'No review rows available to export yet.'
       return
     }
 
@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileName = `cleaned-${slugify(currentSheetName || 'workbook')}-${dateStamp()}.xlsx`
     XLSX.writeFile(wb, fileName)
 
-    statusText.innerText = `Clean export ready: ${activeRows.length} rows exported across ${sheetsToExport.length} tab(s).`
+    statusText.innerText = `Review export ready: ${activeRows.length} rows exported across ${sheetsToExport.length} tab(s).`
   })
 
   function populateSheetSelector(sheets) {
