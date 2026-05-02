@@ -118,9 +118,9 @@
     </main>
   </div>
 
-  <script src="js/guard.js"></script>
-  <script src="js/layout.js"></script>
-  <script src="js/excel-cleanup.js?v=9"></script>
+  <script src="js/guard.js?v=1777745152"></script>
+  <script src="js/layout.js?v=1777745152"></script>
+  <script src="js/excel-cleanup.js?v=1777745152"></script>
 
 
 <!-- EXPAND REVIEW OVERLAY -->
@@ -137,6 +137,154 @@
   </div>
 </div>
 
-  <script src="js/review-overlay.js"></script>
+  <script src="js/review-overlay.js?v=1777745152"></script>
+
+<script id="pmshUsageTracker">
+(function() {
+  if (window.__pmshUsageTrackerInstalled) return;
+  window.__pmshUsageTrackerInstalled = true;
+
+  function currentPage() {
+    var path = window.location.pathname || "/";
+    var page = path.split("/").pop() || "index.html";
+    return page;
+  }
+
+  function moduleName() {
+    var page = currentPage().toLowerCase();
+
+    if (page.indexOf("certificate") >= 0) return "certificate_generator";
+    if (page.indexOf("cleanup") >= 0) return "excel_cleanup";
+    if (page.indexOf("report") >= 0) return "reporting";
+    if (page.indexOf("pdf") >= 0) return "excel_to_pdf";
+    if (page.indexOf("register") >= 0 || page.indexOf("ocr") >= 0) return "register_digitisation";
+    if (page.indexOf("booking") >= 0) return "admin_bookings";
+    if (page.indexOf("job") >= 0 || page.indexOf("facilitator") >= 0) return "facilitator_jobs";
+    if (page === "index.html") return "prototype_hub";
+
+    return page.replace(".html", "").replace(/[^a-z0-9]+/g, "_");
+  }
+
+  function cleanLabel(value) {
+    return String(value || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 140);
+  }
+
+  function safeDetails(obj) {
+    var out = {};
+    Object.keys(obj || {}).forEach(function(key) {
+      var low = key.toLowerCase();
+      if (low.indexOf("name") >= 0) return;
+      if (low.indexOf("email") >= 0) return;
+      if (low.indexOf("phone") >= 0) return;
+      if (low.indexOf("idnumber") >= 0) return;
+      if (low === "id") return;
+      if (low.indexOf("filename") >= 0) return;
+      out[key] = obj[key];
+    });
+    return out;
+  }
+
+  function logUsage(eventType, label, count, details) {
+    fetch("/api/log-usage", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        module: moduleName(),
+        page: currentPage(),
+        event_type: eventType,
+        event_label: cleanLabel(label),
+        event_count: count || 1,
+        details: safeDetails(details || {})
+      })
+    }).catch(function() {});
+  }
+
+  window.pmshLogUsage = logUsage;
+
+  document.addEventListener("DOMContentLoaded", function() {
+    logUsage("page_opened", document.title || currentPage(), 1, { path: window.location.pathname });
+
+    document.querySelectorAll('input[type="file"]').forEach(function(input) {
+      input.addEventListener("change", function() {
+        var files = input.files ? Array.from(input.files) : [];
+        var extensions = {};
+        var totalSize = 0;
+
+        files.forEach(function(file) {
+          var ext = String(file.name || "").split(".").pop().toLowerCase();
+          if (ext && ext.length <= 8) extensions[ext] = (extensions[ext] || 0) + 1;
+          totalSize += Number(file.size || 0);
+        });
+
+        logUsage("file_selected", input.id || input.name || "file input", files.length || 1, {
+          file_count: files.length,
+          extensions: extensions,
+          total_size_bytes: totalSize
+        });
+      });
+    });
+
+    document.addEventListener("click", function(event) {
+      var el = event.target && event.target.closest ? event.target.closest("button,a") : null;
+      if (!el) return;
+
+      var label = cleanLabel(el.innerText || el.textContent || el.getAttribute("aria-label") || el.id || el.href || "");
+      var lower = label.toLowerCase();
+
+      var important =
+        lower.indexOf("generate") >= 0 ||
+        lower.indexOf("export") >= 0 ||
+        lower.indexOf("download") >= 0 ||
+        lower.indexOf("clean") >= 0 ||
+        lower.indexOf("duplicate") >= 0 ||
+        lower.indexOf("upload") >= 0 ||
+        lower.indexOf("convert") >= 0 ||
+        lower.indexOf("save") >= 0 ||
+        lower.indexOf("preview") >= 0 ||
+        lower.indexOf("submit") >= 0 ||
+        lower.indexOf("review") >= 0 ||
+        lower.indexOf("approve") >= 0 ||
+        lower.indexOf("decline") >= 0 ||
+        lower.indexOf("dashboard") >= 0 ||
+        lower.indexOf("report") >= 0 ||
+        lower.indexOf("pdf") >= 0 ||
+        lower.indexOf("certificate") >= 0;
+
+      if (!important) return;
+
+      var eventType = "action_clicked";
+
+      if (lower.indexOf("generate") >= 0) eventType = "generate_clicked";
+      else if (lower.indexOf("export") >= 0) eventType = "export_clicked";
+      else if (lower.indexOf("download") >= 0) eventType = "download_clicked";
+      else if (lower.indexOf("clean") >= 0) eventType = "clean_clicked";
+      else if (lower.indexOf("duplicate") >= 0) eventType = "duplicate_action_clicked";
+      else if (lower.indexOf("convert") >= 0 || lower.indexOf("pdf") >= 0) eventType = "pdf_action_clicked";
+      else if (lower.indexOf("save") >= 0) eventType = "save_clicked";
+      else if (lower.indexOf("preview") >= 0) eventType = "preview_clicked";
+      else if (lower.indexOf("submit") >= 0) eventType = "submit_clicked";
+      else if (lower.indexOf("review") >= 0) eventType = "review_clicked";
+      else if (lower.indexOf("approve") >= 0) eventType = "approve_clicked";
+      else if (lower.indexOf("decline") >= 0) eventType = "decline_clicked";
+      else if (lower.indexOf("report") >= 0) eventType = "report_action_clicked";
+
+      logUsage(eventType, label, 1, {
+        tag: el.tagName,
+        id: el.id || "",
+        class_name: el.className || ""
+      });
+    }, true);
+  });
+})();
+</script>
+
+
+
+
 </body>
 </html>

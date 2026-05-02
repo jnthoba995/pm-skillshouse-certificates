@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
       removedHeaders.forEach(h => {
         copy[h] = row[h] || ''
       })
-      copy['Cleanup Status'] = 'Removed duplicate'
+      copy['Cleanup Status'] = 'Marked for review'
       copy['Duplicate Reason'] = row.duplicateReason || row.similarityReason || ''
       return copy
     })
@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
       { Metric: 'Tabs Exported', Value: sheetsToExport.length },
       { Metric: 'Original Rows', Value: exportSourceRows.length },
       { Metric: 'Cleaned Rows Exported', Value: activeRows.length },
-      { Metric: 'Duplicate Rows Removed', Value: removedRows.length },
+      { Metric: 'Rows Marked for Review', Value: removedRows.length },
       { Metric: 'Rule Used', Value: activeRule === 'training_register' ? 'Training Register (Sessions)' : 'Generic workbook' },
       { Metric: 'Duplicate View Used', Value: duplicateViewMode },
       { Metric: 'Export Date', Value: new Date().toLocaleString() }
@@ -229,13 +229,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (removed.length) {
       const removedWs = XLSX.utils.json_to_sheet(removed)
-      XLSX.utils.book_append_sheet(wb, removedWs, 'Removed Duplicates')
+      XLSX.utils.book_append_sheet(wb, removedWs, 'Review List')
     }
 
     const fileName = `cleaned-${slugify(currentSheetName || 'workbook')}-${dateStamp()}.xlsx`
     XLSX.writeFile(wb, fileName)
 
-    statusText.innerText = `Clean export ready: ${activeRows.length} rows exported across ${sheetsToExport.length} tab(s), ${removedRows.length} duplicates removed.`
+    statusText.innerText = `Clean export ready: ${activeRows.length} rows exported across ${sheetsToExport.length} tab(s).`
   })
 
   function populateSheetSelector(sheets) {
@@ -1063,7 +1063,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!activeChecks.length) {
         status.textContent = 'No checks selected. All rows remain visible.'
       } else if (!rows.length) {
-        status.textContent = 'No potential matches found for: ' + activeChecks.join(' + ') + '. No rows were removed.'
+        status.textContent = 'No potential matches found for: ' + activeChecks.join(' + ') + '. Try another check or reset the view.'
       } else {
         status.textContent = rows.length + ' possible record(s) found using: ' + activeChecks.join(' + ') + '. Highlighted rows are warnings for manual verification.'
       }
@@ -1586,7 +1586,7 @@ document.addEventListener('DOMContentLoaded', () => {
         row.duplicateLevel = level
         row.duplicateReason = level + ' detected using ' + key.split(':')[1].replace(/-/g, ' ')
         row.duplicateFields = duplicateFieldsFromKey(key, headers)
-        row.rowState = 'removed'
+        row.rowState = 'active'
 
         if (!first.duplicateLevel) {
           first.duplicateLevel = 'Kept original'
@@ -1815,7 +1815,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getStatusHtml(row) {
     if (row.rowState === 'removed') {
-      return `<span class="status-pill status-removed">Removed</span>`
+      return `<span class="status-pill status-removed">Marked for review</span>`
     }
 
     if (row.keepChoice) {
@@ -1856,14 +1856,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return `
         <div class="row-actions">
           <button class="row-btn keep" data-action="keep" data-id="${row._id}">Keep</button>
-          <button class="row-btn remove" data-action="remove" data-id="${row._id}">Remove</button>
+          <button class="row-btn remove" data-action="remove" data-id="${row._id}">Mark for Review</button>
         </div>
       `
     }
 
     return `
       <div class="row-actions">
-        <button class="row-btn remove" data-action="remove" data-id="${row._id}">Remove</button>
+        <button class="row-btn remove" data-action="remove" data-id="${row._id}">Mark for Review</button>
       </div>
     `
   }
@@ -1877,7 +1877,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!row) return
 
         if (action === 'remove') {
-          row.rowState = 'removed'
+          row.rowState = 'active'
           row.keepChoice = false
         }
 
@@ -1929,7 +1929,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const kept = workingRows.filter(r => r.keepChoice && r.rowState !== 'removed').length
     const visible = getVisibleRows().length
 
-    summaryText.innerText = `${total} rows • ${active} active • ${removed} removed • ${duplicates} duplicate rows • ${kept} kept • ${visible} visible`
+    summaryText.innerText = `${total} rows loaded • ${duplicates} duplicate rows flagged • ${kept} marked for review • ${visible} currently visible`
   }
 
   function dateStamp() {
