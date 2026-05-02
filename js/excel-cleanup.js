@@ -941,6 +941,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+
+  function addProvinceSupportWithinExistingGroups(rows) {
+    const headers = getInvestigationHeaders(rows)
+    const grouped = {}
+
+    rows.forEach(row => {
+      const group = row.duplicateInvestigationGroup || ''
+      if (!group) return
+      if (!grouped[group]) grouped[group] = []
+      grouped[group].push(row)
+    })
+
+    Object.keys(grouped).forEach(groupName => {
+      const groupRows = grouped[groupName]
+      const provinceGroups = {}
+
+      groupRows.forEach(row => {
+        const province = normalizeProvinceValue(getInvestigationProvinceValue(row, headers))
+        if (!province || province.length < 3) return
+        if (!provinceGroups[province]) provinceGroups[province] = []
+        provinceGroups[province].push(row)
+      })
+
+      Object.keys(provinceGroups).forEach(province => {
+        const provinceRows = provinceGroups[province]
+        if (provinceRows.length < 2) return
+
+        provinceRows.forEach(row => {
+          markInvestigationRow(row, 'province', 'exact', 'Same province')
+        })
+      })
+    })
+  }
+
   function keepOnlyCompleteInvestigationGroups(rows) {
     const groups = {}
 
@@ -1003,8 +1037,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!primaryFiltersActive && duplicateInvestigationFilters.province) {
       rows = findProvinceInvestigationRows(rows)
-    } else if (duplicateInvestigationFilters.province) {
-      findProvinceInvestigationRows(rows.length ? rows : duplicateInvestigationBaseRows.slice())
+    } else if (duplicateInvestigationFilters.province && rows.length) {
+      addProvinceSupportWithinExistingGroups(rows)
     }
 
     if (primaryFiltersActive && supportFiltersActive && !rows.length) {
