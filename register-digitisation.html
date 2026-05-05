@@ -10,6 +10,88 @@
   <link rel="stylesheet" href="css/modules.css?v=10" />
   <link rel="stylesheet" href="css/forms.css?v=10" />
   <link rel="stylesheet" href="css/tables.css?v=10" />
+
+<style>
+.row-edit-modal{
+  overflow:hidden;
+}
+.row-edit-card{
+  max-height:90vh;
+  overflow-y:auto;
+  padding-right:6px;
+}
+</style>
+
+
+<style>
+.row-edit-card{
+  max-height:90vh;
+  overflow-y:auto;
+  padding-right:6px;
+}
+.assessment-toggle-row{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin:22px 0 14px;
+}
+.assessment-toggle-btn{
+  border:1px solid #f28c18;
+  background:#fff7ed;
+  color:#b45309;
+  font-weight:800;
+  border-radius:12px;
+  padding:12px 16px;
+  cursor:pointer;
+}
+.assessment-toggle-btn.active{
+  background:#f28c18;
+  color:#fff;
+}
+.assessment-panel{
+  display:none;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:16px;
+  margin:0 0 16px;
+  background:#f9fafb;
+}
+.assessment-panel.open{
+  display:block;
+}
+.assessment-question{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:14px;
+  margin:12px 0;
+}
+.assessment-question-title{
+  font-weight:900;
+  margin-bottom:10px;
+  color:#111827;
+}
+.assessment-options{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px 16px;
+}
+.assessment-options label{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-weight:700;
+}
+</style>
+
+
+<style>
+.client-required{
+  border:2px solid #f28c18 !important;
+  background:#fff7ed !important;
+}
+</style>
+
 </head>
 <body>
   <div id="appHeader"></div>
@@ -23,7 +105,19 @@
       <section class="module-card" style="margin-bottom:20px;">
         <div class="section-head">
           <div>
+
             <h3>Upload Manual Register</h3>
+            <div class="client-select-wrap" style="margin:8px 0 16px;">
+              <label style="font-weight:800; display:block; margin-bottom:6px;">Select Client (Required)</label>
+              <select id="clientSelector" style="width:100%; max-width:520px; padding:12px; border-radius:10px; border:1px solid #e5e7eb; font-weight:700;">
+                <option value="">-- Select Client --</option>
+                <option value="liberty">Liberty</option>
+                <option value="stanlib">STANLIB</option>
+                <option value="alexforbes">AlexForbes</option>
+                <option value="sanlam">Sanlam</option>
+              </select>
+            </div>
+
             <div class="summary-text">Convert scanned attendance registers into editable digital records.</div>
           </div>
         </div>
@@ -33,15 +127,6 @@
             <input type="file" id="registerFile" accept=".pdf,image/*" />
             <span id="registerFileName" class="cleanup-file-name">No file chosen</span>
           </div>
-
-          <select id="registerClient" class="sheet-select cleanup-select">
-            <option value="">Select client</option>
-            <option value="liberty">Liberty</option>
-            <option value="stanlib">STANLIB</option>
-            <option value="sanlam">Sanlam</option>
-            <option value="alexforbes">AlexForbes</option>
-          </select>
-
           <button id="processRegisterBtn" class="primary-btn cleanup-action-btn" type="button">Process Register</button>
         </div>
       </section>
@@ -97,9 +182,9 @@
     </main>
   </div>
 
-  <script src="js/guard.js"></script>
-  <script src="js/layout.js"></script>
-  <script src="js/register-digitisation.js?v=5"></script>
+  <script src="js/guard.js?v=1777745152"></script>
+  <script src="js/layout.js?v=1777745152"></script>
+  <script src="js/register-digitisation.js?v=1777745152"></script>
 
 <div id="rowModal" class="row-edit-modal" style="display:none;">
   <div class="row-edit-card">
@@ -178,6 +263,187 @@
       </label>
     </div>
 
+
+    <div class="assessment-toggle-row">
+      <button id="preAssessmentToggleBtn" class="assessment-toggle-btn" type="button">Pre-Assessment</button>
+      <button id="postAssessmentToggleBtn" class="assessment-toggle-btn" type="button">Post-Assessment</button>
+    </div>
+
+
+    
+<div id="preAssessmentPanel" class="assessment-panel">
+  <h4>PRE-ASSESSMENT (LIBERTY)</h4>
+
+  <div class="assessment-question">
+    <div class="assessment-question-title">
+    1. Which of these sources of money can be classified as income? (Select All that Apply)
+    </div>
+    <div class="assessment-options">
+      <label><input type="checkbox" name="pre_income_sources" value="Rental income"> Rental income</label>
+      <label><input type="checkbox" name="pre_income_sources" value="Money from friends or family"> Money from friends or family</label>
+      <label><input type="checkbox" name="pre_income_sources" value="Monthly salary"> Monthly salary</label>
+      <label><input type="checkbox" name="pre_income_sources" value="Share income"> Share income</label>
+      <label><input type="checkbox" name="pre_income_sources" value="Social grants"> Social grants</label>
+      <label><input type="checkbox" name="pre_income_sources" value="All of the above"> All of the above</label>
+    </div>
+  </div>
+
+  <div class="assessment-question">
+    <div class="assessment-question-title">
+    2. Which of the following influences your credit scores the most? (Choose ONE)
+    </div>
+    <div class="assessment-options">
+      <label><input type="radio" name="pre_credit_factor" value="Credit length"> Credit length</label>
+      <label><input type="radio" name="pre_credit_factor" value="New credit"> New credit</label>
+      <label><input type="radio" name="pre_credit_factor" value="Types of credit"> Types of credit</label>
+      <label><input type="radio" name="pre_credit_factor" value="Payment history"> Payment history</label>
+      <label><input type="radio" name="pre_credit_factor" value="Credit utilization"> Credit utilization</label>
+    </div>
+  </div>
+
+  <div class="assessment-question">
+    <div class="assessment-question-title">
+    3. How long will it take Jabu to pay off his home loan if he pays R250 extra each month?
+    </div>
+    <div class="assessment-options">
+      <label><input type="radio" name="pre_loan_term" value="20 years"> 20 years</label>
+      <label><input type="radio" name="pre_loan_term" value="16-17 years"> 16-17 years</label>
+      <label><input type="radio" name="pre_loan_term" value="13-14 years"> 13-14 years</label>
+    </div>
+  </div>
+
+  <div class="assessment-question">
+    <div class="assessment-question-title">
+    4. Which of the following statements is incorrect about tax-free savings accounts?
+    </div>
+    <div class="assessment-options">
+      <label><input type="radio" name="pre_tax_free" value="R3000 limit"> R3,000 is the monthly limit</label>
+      <label><input type="radio" name="pre_tax_free" value="Tax on interest"> You only pay tax on your interest</label>
+      <label><input type="radio" name="pre_tax_free" value="Auto payments"> You can set up automatic payments</label>
+    </div>
+  </div>
+
+  <div class="assessment-question">
+    <div class="assessment-question-title">
+    5. When you die without a will, the Law decides who will inherit your assets.
+    </div>
+    <div class="assessment-options">
+      <label><input type="radio" name="pre_will" value="True"> True</label>
+      <label><input type="radio" name="pre_will" value="False"> False</label>
+      <label><input type="radio" name="pre_will" value="Not sure"> Not sure</label>
+    </div>
+  </div>
+
+  <div class="assessment-question">
+    <div class="assessment-question-title">
+    6. Which type of insurance is classified as long-term insurance?
+    </div>
+    <div class="assessment-options">
+      <label><input type="radio" name="pre_insurance" value="Travel Insurance"> Travel Insurance</label>
+      <label><input type="radio" name="pre_insurance" value="Life Insurance"> Life Insurance</label>
+      <label><input type="radio" name="pre_insurance" value="Motor vehicle insurance"> Motor vehicle insurance</label>
+    </div>
+  </div>
+</div>
+
+
+
+<div id="postAssessmentPanel" class="assessment-panel">
+  <h4>POST-ASSESSMENT (LIBERTY)</h4>
+
+  <div class="assessment-question">
+    <div class="assessment-question-title">1. Which of these sources of money can be classified as income? (Select All that Apply)</div>
+    <div class="assessment-options">
+      <label><input type="checkbox" name="post_income_sources" value="Rental income"> Rental income</label>
+      <label><input type="checkbox" name="post_income_sources" value="Money from friends or family"> Money from friends or family</label>
+      <label><input type="checkbox" name="post_income_sources" value="Monthly salary"> Monthly salary</label>
+      <label><input type="checkbox" name="post_income_sources" value="Share income"> Share income</label>
+      <label><input type="checkbox" name="post_income_sources" value="Social grants"> Social grants</label>
+      <label><input type="checkbox" name="post_income_sources" value="All of the above"> All of the above</label>
+    </div>
+  </div>
+
+  <div class="assessment-question">
+    <div class="assessment-question-title">2. Which of the following influences your credit scores the most? (Choose ONE)</div>
+    <div class="assessment-options">
+      <label><input type="radio" name="post_credit_factor" value="Credit length"> Credit length</label>
+      <label><input type="radio" name="post_credit_factor" value="New credit"> New credit</label>
+      <label><input type="radio" name="post_credit_factor" value="Types of credit"> Types of credit</label>
+      <label><input type="radio" name="post_credit_factor" value="Payment history"> Payment history</label>
+      <label><input type="radio" name="post_credit_factor" value="Credit utilization"> Credit utilization</label>
+    </div>
+  </div>
+
+  <div class="assessment-question">
+    <div class="assessment-question-title">3. How long do you think it will take Jabu to pay off his home loan if he pays R250.00 extra each month?</div>
+    <div class="assessment-options">
+      <label><input type="radio" name="post_loan_term" value="20 years"> 20 years</label>
+      <label><input type="radio" name="post_loan_term" value="16-17 years"> 16 - 17 years</label>
+      <label><input type="radio" name="post_loan_term" value="13-14 years"> 13 - 14 years</label>
+    </div>
+  </div>
+
+  <div class="assessment-question">
+    <div class="assessment-question-title">4. Which of the following statements is incorrect about tax-free savings accounts?</div>
+    <div class="assessment-options">
+      <label><input type="radio" name="post_tax_free" value="R3,000 is the monthly limit you can save"> R3,000 is the monthly limit you can save</label>
+      <label><input type="radio" name="post_tax_free" value="You only pay tax on your interest"> You only pay tax on your interest</label>
+      <label><input type="radio" name="post_tax_free" value="You can set up automatic payments from your account"> You can set up automatic payments from your account</label>
+    </div>
+  </div>
+
+  <div class="assessment-question">
+    <div class="assessment-question-title">5. True or false, when you die without a will, the Law decides who will inherit your assets.</div>
+    <div class="assessment-options">
+      <label><input type="radio" name="post_will" value="True"> True</label>
+      <label><input type="radio" name="post_will" value="False"> False</label>
+      <label><input type="radio" name="post_will" value="Not sure"> Not sure</label>
+    </div>
+  </div>
+
+  <div class="assessment-question">
+    <div class="assessment-question-title">6. Which type of insurance below is classified as long-term insurance?</div>
+    <div class="assessment-options">
+      <label><input type="radio" name="post_insurance" value="Travel Insurance"> Travel Insurance</label>
+      <label><input type="radio" name="post_insurance" value="Life insurance"> Life insurance</label>
+      <label><input type="radio" name="post_insurance" value="Motor vehicle insurance"> Motor vehicle insurance</label>
+    </div>
+  </div>
+
+  <h4 style="margin-top:22px;">TRAINING FEEDBACK</h4>
+
+  <div class="assessment-question">
+    <div class="assessment-question-title">1. How well did the facilitator demonstrate understanding of the financial literacy topics covered in the training session?</div>
+    <div class="assessment-options">
+      <label><input type="radio" name="feedback_understanding" value="Poor"> Poor</label>
+      <label><input type="radio" name="feedback_understanding" value="Average"> Average</label>
+      <label><input type="radio" name="feedback_understanding" value="Excellent"> Excellent</label>
+    </div>
+    <textarea name="feedback_understanding_comment" placeholder="Comment"></textarea>
+  </div>
+
+  <div class="assessment-question">
+    <div class="assessment-question-title">2. Were the explanations provided by the facilitator clear and easy to understand?</div>
+    <div class="assessment-options">
+      <label><input type="radio" name="feedback_clear" value="Poor"> Poor</label>
+      <label><input type="radio" name="feedback_clear" value="Average"> Average</label>
+      <label><input type="radio" name="feedback_clear" value="Excellent"> Excellent</label>
+    </div>
+    <textarea name="feedback_clear_comment" placeholder="Comment"></textarea>
+  </div>
+
+  <div class="assessment-question">
+    <div class="assessment-question-title">3. Did the facilitator effectively address participant questions and concerns regarding the content?</div>
+    <div class="assessment-options">
+      <label><input type="radio" name="feedback_questions" value="Poor"> Poor</label>
+      <label><input type="radio" name="feedback_questions" value="Average"> Average</label>
+      <label><input type="radio" name="feedback_questions" value="Excellent"> Excellent</label>
+    </div>
+    <textarea name="feedback_questions_comment" placeholder="Comment"></textarea>
+  </div>
+</div>
+
+
     <div class="row-edit-actions">
       <button id="cancelRowEditBtn" class="secondary-btn" type="button">Cancel</button>
       <button id="saveRowEditBtn" class="primary-btn" type="button">Save Row</button>
@@ -196,5 +462,189 @@
   <button id="popupDeleteBtn" type="button">Delete Row</button>
   <button id="popupSelectAllBtn" type="button">Select All</button>
 </div>
+
+<script id="pmshUsageTracker">
+(function() {
+  if (window.__pmshUsageTrackerInstalled) return;
+  window.__pmshUsageTrackerInstalled = true;
+
+  function currentPage() {
+    var path = window.location.pathname || "/";
+    var page = path.split("/").pop() || "index.html";
+    return page;
+  }
+
+  function moduleName() {
+    var page = currentPage().toLowerCase();
+
+    if (page.indexOf("certificate") >= 0) return "certificate_generator";
+    if (page.indexOf("cleanup") >= 0) return "excel_cleanup";
+    if (page.indexOf("report") >= 0) return "reporting";
+    if (page.indexOf("pdf") >= 0) return "excel_to_pdf";
+    if (page.indexOf("register") >= 0 || page.indexOf("ocr") >= 0) return "register_digitisation";
+    if (page.indexOf("booking") >= 0) return "admin_bookings";
+    if (page.indexOf("job") >= 0 || page.indexOf("facilitator") >= 0) return "facilitator_jobs";
+    if (page === "index.html") return "prototype_hub";
+
+    return page.replace(".html", "").replace(/[^a-z0-9]+/g, "_");
+  }
+
+  function cleanLabel(value) {
+    return String(value || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 140);
+  }
+
+  function safeDetails(obj) {
+    var out = {};
+    Object.keys(obj || {}).forEach(function(key) {
+      var low = key.toLowerCase();
+      if (low.indexOf("name") >= 0) return;
+      if (low.indexOf("email") >= 0) return;
+      if (low.indexOf("phone") >= 0) return;
+      if (low.indexOf("idnumber") >= 0) return;
+      if (low === "id") return;
+      if (low.indexOf("filename") >= 0) return;
+      out[key] = obj[key];
+    });
+    return out;
+  }
+
+  function logUsage(eventType, label, count, details) {
+    fetch("/api/log-usage", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        module: moduleName(),
+        page: currentPage(),
+        event_type: eventType,
+        event_label: cleanLabel(label),
+        event_count: count || 1,
+        details: safeDetails(details || {})
+      })
+    }).catch(function() {});
+  }
+
+  window.pmshLogUsage = logUsage;
+
+  document.addEventListener("DOMContentLoaded", function() {
+    logUsage("page_opened", document.title || currentPage(), 1, { path: window.location.pathname });
+
+    document.querySelectorAll('input[type="file"]').forEach(function(input) {
+      input.addEventListener("change", function() {
+        var files = input.files ? Array.from(input.files) : [];
+        var extensions = {};
+        var totalSize = 0;
+
+        files.forEach(function(file) {
+          var ext = String(file.name || "").split(".").pop().toLowerCase();
+          if (ext && ext.length <= 8) extensions[ext] = (extensions[ext] || 0) + 1;
+          totalSize += Number(file.size || 0);
+        });
+
+        logUsage("file_selected", input.id || input.name || "file input", files.length || 1, {
+          file_count: files.length,
+          extensions: extensions,
+          total_size_bytes: totalSize
+        });
+      });
+    });
+
+    document.addEventListener("click", function(event) {
+      var el = event.target && event.target.closest ? event.target.closest("button,a") : null;
+      if (!el) return;
+
+      var label = cleanLabel(el.innerText || el.textContent || el.getAttribute("aria-label") || el.id || el.href || "");
+      var lower = label.toLowerCase();
+
+      var important =
+        lower.indexOf("generate") >= 0 ||
+        lower.indexOf("export") >= 0 ||
+        lower.indexOf("download") >= 0 ||
+        lower.indexOf("clean") >= 0 ||
+        lower.indexOf("duplicate") >= 0 ||
+        lower.indexOf("upload") >= 0 ||
+        lower.indexOf("convert") >= 0 ||
+        lower.indexOf("save") >= 0 ||
+        lower.indexOf("preview") >= 0 ||
+        lower.indexOf("submit") >= 0 ||
+        lower.indexOf("review") >= 0 ||
+        lower.indexOf("approve") >= 0 ||
+        lower.indexOf("decline") >= 0 ||
+        lower.indexOf("dashboard") >= 0 ||
+        lower.indexOf("report") >= 0 ||
+        lower.indexOf("pdf") >= 0 ||
+        lower.indexOf("certificate") >= 0;
+
+      if (!important) return;
+
+      var eventType = "action_clicked";
+
+      if (lower.indexOf("generate") >= 0) eventType = "generate_clicked";
+      else if (lower.indexOf("export") >= 0) eventType = "export_clicked";
+      else if (lower.indexOf("download") >= 0) eventType = "download_clicked";
+      else if (lower.indexOf("clean") >= 0) eventType = "clean_clicked";
+      else if (lower.indexOf("duplicate") >= 0) eventType = "duplicate_action_clicked";
+      else if (lower.indexOf("convert") >= 0 || lower.indexOf("pdf") >= 0) eventType = "pdf_action_clicked";
+      else if (lower.indexOf("save") >= 0) eventType = "save_clicked";
+      else if (lower.indexOf("preview") >= 0) eventType = "preview_clicked";
+      else if (lower.indexOf("submit") >= 0) eventType = "submit_clicked";
+      else if (lower.indexOf("review") >= 0) eventType = "review_clicked";
+      else if (lower.indexOf("approve") >= 0) eventType = "approve_clicked";
+      else if (lower.indexOf("decline") >= 0) eventType = "decline_clicked";
+      else if (lower.indexOf("report") >= 0) eventType = "report_action_clicked";
+
+      logUsage(eventType, label, 1, {
+        tag: el.tagName,
+        id: el.id || "",
+        class_name: el.className || ""
+      });
+    }, true);
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  function setupAssessmentToggle(btnId, panelId){
+    const btn = document.getElementById(btnId);
+    const panel = document.getElementById(panelId);
+    if(!btn || !panel) return;
+    btn.addEventListener("click", function(){
+      const open = panel.classList.toggle("open");
+      btn.classList.toggle("active", open);
+    });
+  }
+  setupAssessmentToggle("preAssessmentToggleBtn", "preAssessmentPanel");
+  setupAssessmentToggle("postAssessmentToggleBtn", "postAssessmentPanel");
+})();
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  const clientSelector = document.getElementById("clientSelector");
+
+  function highlightClient(){
+    if(!clientSelector) return;
+
+    if(!clientSelector.value){
+      clientSelector.classList.add("client-required");
+    } else {
+      clientSelector.classList.remove("client-required");
+    }
+  }
+
+  if(clientSelector){
+    clientSelector.addEventListener("change", highlightClient);
+    highlightClient(); // run on load
+  }
+});
+</script>
+
 </body>
 </html>

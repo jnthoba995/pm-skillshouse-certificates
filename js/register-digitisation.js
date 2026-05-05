@@ -1,3 +1,14 @@
+
+const clientSelector = document.getElementById("clientSelector");
+
+function requireClientSelected(){
+  if(!clientSelector || !clientSelector.value){
+    alert("Please select a client before uploading or processing.");
+    return false;
+  }
+  return true;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   const fileInput = document.getElementById('registerFile')
   const fileName = document.getElementById('registerFileName')
@@ -453,3 +464,32 @@ function deleteRowFromTop() {
 }
 
 
+
+
+
+document.addEventListener("DOMContentLoaded", function(){
+  const clientSelector = document.getElementById("clientSelector");
+  const processBtn = document.getElementById("processRegisterBtn");
+  const fileInput = document.querySelector("input[type='file']");
+
+  function updateState(){
+    const selected = clientSelector && clientSelector.value;
+
+    if(processBtn){
+      processBtn.disabled = !selected;
+      processBtn.style.opacity = selected ? "1" : "0.5";
+      processBtn.style.cursor = selected ? "pointer" : "not-allowed";
+    }
+
+    if(fileInput){
+      fileInput.disabled = !selected;
+      fileInput.style.opacity = selected ? "1" : "0.5";
+      fileInput.style.cursor = selected ? "pointer" : "not-allowed";
+    }
+  }
+
+  if(clientSelector){
+    clientSelector.addEventListener("change", updateState);
+    updateState(); // run on load
+  }
+});
